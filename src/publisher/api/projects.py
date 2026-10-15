@@ -61,6 +61,7 @@ async def analyze_project(req: AnalyzeProjectRequest, db: Session = Depends(get_
         repo_url=repo_info.html_url,
         demo_url=req.demo_url,
         user_notes=req.user_notes,
+        readme_content=repo_info.readme_content,
     )
     proj_repo.update_status(project.id, ProjectStatus.ANALYZING)
 
@@ -269,6 +270,19 @@ async def generate_draft_for_project(
     evidence_items = ev_repo.list_for_project(project_id)
     settings_rec = settings_repo.get_or_create()
 
+    # Ensure full README content is available
+    readme_content = project.readme_content
+    if not readme_content and project.repo_url:
+        try:
+            gh_token = credentials.get_credential("github_pat")
+            gh_client = GitHubClient(token=gh_token)
+            readme_content = await gh_client.fetch_readme(project.repo_url)
+            if readme_content:
+                proj_repo.update_readme(project.id, readme_content)
+                project.readme_content = readme_content
+        except Exception as exc:
+            logger.warning("Could not auto-fetch README for draft generation: %s", exc)
+
     # Reconstruct evidence pack
     from src.publisher.services.ai.base import EvidenceItem, EvidencePack
 
@@ -277,6 +291,7 @@ async def generate_draft_for_project(
         repo_url=project.repo_url,
         demo_url=project.demo_url,
         user_notes=project.user_notes,
+        readme_content=readme_content,
         items=[
             EvidenceItem(
                 source_type=e.source_type,  # type: ignore

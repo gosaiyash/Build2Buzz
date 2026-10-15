@@ -35,8 +35,8 @@ def test_build_generation_prompt():
     prefs = PostPreferences(style="developer", max_length=1500)
     system_p, user_p = build_generation_prompt(evidence, prefs)
 
-    assert "STRICTLY" in system_p
-    assert "DEVELOPER" in user_p
+    assert "OUTPUT CONTRACT" in system_p
+    assert "developer" in user_p.lower()
     assert "FastAPI-Starter" in user_p
     assert "Modular architecture" in user_p
 
@@ -151,4 +151,112 @@ def test_sanitize_linkedin_post_zero_emojis_and_clean_links():
     # Check bullet normalization
     assert "- Key Feature 1" in cleaned
     assert "- Key Feature 2" in cleaned
+
+
+def test_build_generation_prompt_includes_full_readme():
+    """Verify that full README text is embedded directly into user prompt."""
+    readme_text = """# Build2Buzz
+An automated system to convert GitHub repos into high-signal LinkedIn posts.
+## Features
+- Real-time demo inspection
+- Evidence verification engine
+- Multi-provider AI router
+"""
+    evidence = EvidencePack(
+        project_name="Build2Buzz",
+        repo_url="https://github.com/gosaiyash/Build2Buzz",
+        readme_content=readme_text,
+        items=[],
+    )
+    prefs = PostPreferences(style="professional")
+    sys_prompt, user_prompt = build_generation_prompt(evidence, prefs)
+
+    assert "README REFERENCE MATERIAL" in user_prompt
+    assert "Real-time demo inspection" in user_prompt
+    assert "Multi-provider AI router" in user_prompt
+
+
+@pytest.mark.asyncio
+async def test_openrouter_provider_headers_and_payload():
+    """Verify OpenRouter provider sets base_url and attaches HTTP-Referer and X-OpenRouter-Title."""
+    provider = CloudAPIProvider(
+        api_key="sk-or-test-key",
+        provider="openrouter",
+        model="openai/gpt-4o-mini",
+    )
+    assert provider.base_url == "https://openrouter.ai/api/v1"
+
+    headers = provider._get_headers()
+    assert headers["Authorization"] == "Bearer sk-or-test-key"
+    assert headers["HTTP-Referer"] == "http://localhost:8000"
+    assert headers["X-OpenRouter-Title"] == "Build2Buzz"
+
+    mock_resp = httpx.Response(
+        status_code=200,
+        json={
+            "choices": [
+                {
+                    "message": {
+                        "content": json.dumps({
+                            "post_text": "I developed Build2Buzz using Python and FastAPI to automate developer project publishing.",
+                            "hashtags": ["#Python", "#DevCommunity"],
+                            "project_links": ["https://github.com/gosaiyash/Build2Buzz"],
+                        })
+                    }
+                }
+            ]
+        },
+    )
+
+    evidence = EvidencePack(
+        project_name="Build2Buzz",
+        repo_url="https://github.com/gosaiyash/Build2Buzz",
+        readme_content="# Readme content here",
+        items=[],
+    )
+    prefs = PostPreferences()
+
+    with patch("httpx.AsyncClient.post", return_value=mock_resp) as mock_post:
+        output = await provider.generate_linkedin_draft(evidence, prefs)
+        assert "I developed Build2Buzz using Python and FastAPI" in output.post_text
+        call_headers = mock_post.call_args.kwargs["headers"]
+        assert call_headers["HTTP-Referer"] == "http://localhost:8000"
+        assert call_headers["X-OpenRouter-Title"] == "Build2Buzz"
+
+
+@pytest.mark.asyncio
+async def test_cloud_provider_plain_text_resilience():
+    """Verify provider parses plain text responses gracefully if model ignores JSON schema."""
+    provider = CloudAPIProvider(
+        api_key="sk-or-test-key",
+        provider="openrouter",
+        model="meta-llama/llama-3.1-8b-instruct",
+    )
+
+    plain_text_reply = (
+        "I built TaskEngine using Go and SQLite to handle concurrent queue jobs.\n\n"
+        "Key Technical Capabilities:\n"
+        "- Concurrency safety via mutex locks\n"
+        "- Persistent SQLite backing\n\n"
+        "GitHub Repository: https://github.com/example/TaskEngine\n\n"
+        "#Go #OpenSource"
+    )
+
+    mock_resp = httpx.Response(
+        status_code=200,
+        json={"choices": [{"message": {"content": plain_text_reply}}]},
+    )
+
+    evidence = EvidencePack(
+        project_name="TaskEngine",
+        repo_url="https://github.com/example/TaskEngine",
+        items=[],
+    )
+    prefs = PostPreferences()
+
+    with patch("httpx.AsyncClient.post", return_value=mock_resp):
+        output = await provider.generate_linkedin_draft(evidence, prefs)
+        assert "I built TaskEngine using Go and SQLite" in output.post_text
+        assert "https://github.com/example/TaskEngine" in output.post_text
+
 

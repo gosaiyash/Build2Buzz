@@ -55,6 +55,7 @@ class Project(Base):
     repo_url: Mapped[str] = mapped_column(String(512), nullable=False, index=True)
     demo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     user_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    readme_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[ProjectStatus] = mapped_column(
         Enum(ProjectStatus), default=ProjectStatus.CREATED, nullable=False
     )

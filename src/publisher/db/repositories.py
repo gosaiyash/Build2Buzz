@@ -28,12 +28,14 @@ class ProjectRepository:
         repo_url: str,
         demo_url: str | None = None,
         user_notes: str | None = None,
+        readme_content: str | None = None,
     ) -> Project:
         project = Project(
             name=name,
             repo_url=repo_url,
             demo_url=demo_url,
             user_notes=user_notes,
+            readme_content=readme_content,
             status=ProjectStatus.CREATED,
         )
         self.db.add(project)
@@ -53,6 +55,16 @@ class ProjectRepository:
         if not project:
             raise ValueError(f"Project with ID {project_id} not found.")
         project.status = status
+        project.updated_at = datetime.now(timezone.utc)
+        self.db.commit()
+        self.db.refresh(project)
+        return project
+
+    def update_readme(self, project_id: int, readme_content: str) -> Project:
+        project = self.get(project_id)
+        if not project:
+            raise ValueError(f"Project with ID {project_id} not found.")
+        project.readme_content = readme_content
         project.updated_at = datetime.now(timezone.utc)
         self.db.commit()
         self.db.refresh(project)

@@ -170,9 +170,24 @@ class GitHubClient:
                         readme_content = raw_content
                         has_readme = True
                 elif readme_res.status_code == 404:
-                    logger.info("Repository %s/%s does not contain a README.md file.", owner, repo)
+                    logger.info("Repository %s/%s does not contain a README.md file via API.", owner, repo)
             except Exception as exc:
                 logger.warning("Could not fetch README for %s/%s: %s", owner, repo, exc)
+
+            # Fallback: fetch raw README if API didn't retrieve it
+            if not readme_content:
+                default_b = data.get("default_branch", "main")
+                for branch in (default_b, "main", "master"):
+                    try:
+                        raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/README.md"
+                        raw_res = await client.get(raw_url, headers={"User-Agent": "Build2Buzz/1.0"})
+                        if raw_res.status_code == 200 and raw_res.text.strip():
+                            readme_content = raw_res.text
+                            has_readme = True
+                            logger.info("Retrieved README for %s/%s via raw fallback (%s)", owner, repo, branch)
+                            break
+                    except Exception as raw_exc:
+                        logger.debug("Raw fallback README fetch failed: %s", raw_exc)
 
             license_name = None
             if data.get("license") and isinstance(data["license"], dict):
@@ -364,3 +379,32 @@ class GitHubClient:
                 readme_content=readme_content,
                 has_readme=has_readme,
             )
+
+    async def fetch_readme(self, url: str) -> str | None:
+        """Fetch raw or API README content for a repository URL."""
+        owner, repo = parse_github_url(url)
+        readme_api_url = f"{self.base_url}/repos/{owner}/{repo}/readme"
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            try:
+                readme_res = await client.get(readme_api_url, headers=self._get_headers())
+                if readme_res.status_code == 200:
+                    readme_data = readme_res.json()
+                    raw_content = readme_data.get("content", "")
+                    encoding = readme_data.get("encoding", "")
+                    if encoding == "base64" and raw_content:
+                        return base64.b64decode(raw_content).decode("utf-8", errors="replace")
+                    elif raw_content:
+                        return raw_content
+            except Exception as exc:
+                logger.debug("Could not fetch README via API for %s/%s: %s", owner, repo, exc)
+
+            for branch in ("main", "master"):
+                try:
+                    raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/README.md"
+                    raw_res = await client.get(raw_url, headers={"User-Agent": "Build2Buzz/1.0"})
+                    if raw_res.status_code == 200 and raw_res.text.strip():
+                        return raw_res.text
+                except Exception:
+                    pass
+        return None
+

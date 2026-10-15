@@ -34,6 +34,8 @@ class CloudAPIProvider(LLMProvider):
         # Resolve base URL according to provider
         if base_url:
             self.base_url = base_url.rstrip("/")
+        elif self.provider == "openrouter":
+            self.base_url = "https://openrouter.ai/api/v1"
         elif self.provider == "gemini":
             self.base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
         elif self.provider == "anthropic":
@@ -41,6 +43,19 @@ class CloudAPIProvider(LLMProvider):
             self.base_url = "https://api.anthropic.com/v1"
         else:
             self.base_url = "https://api.openai.com/v1"
+
+    def _get_headers(self) -> dict[str, str]:
+        """Construct request headers with OpenRouter rankings metadata if applicable."""
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "Build2Buzz/1.0",
+        }
+        if self.provider == "openrouter" or "openrouter.ai" in self.base_url:
+            headers["HTTP-Referer"] = "http://localhost:8000"
+            headers["X-OpenRouter-Title"] = "Build2Buzz"
+            headers["X-Title"] = "Build2Buzz"
+        return headers
 
     def validate_configuration(self) -> tuple[bool, str]:
         if not self.api_key or not self.api_key.strip():
@@ -55,10 +70,7 @@ class CloudAPIProvider(LLMProvider):
             return False, msg
 
         endpoint = f"{self.base_url}/models"
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "User-Agent": "Build2Buzz/1.0",
-        }
+        headers = self._get_headers()
         try:
             async with httpx.AsyncClient(timeout=20.0) as client:
                 res = await client.get(endpoint, headers=headers)
@@ -84,11 +96,7 @@ class CloudAPIProvider(LLMProvider):
 
         system_prompt, user_prompt = build_generation_prompt(evidence, preferences)
         endpoint = f"{self.base_url}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "User-Agent": "Build2Buzz/1.0",
-        }
+        headers = self._get_headers()
         payload = {
             "model": self.model,
             "messages": [
@@ -103,11 +111,11 @@ class CloudAPIProvider(LLMProvider):
         try:
             async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
                 res = await client.post(endpoint, headers=headers, json=payload)
-                # Fallback: if custom endpoint rejects response_format, retry without it
-                if res.status_code == 400 and "response_format" in res.text:
-                    logger.info("Endpoint does not support response_format; retrying without it.")
+                # Fallback: if custom or OpenRouter endpoint rejects response_format, retry without it
+                if res.status_code == 400:
+                    logger.info("Endpoint rejected response_format; retrying without it.")
                     payload_no_fmt = dict(payload)
-                    del payload_no_fmt["response_format"]
+                    payload_no_fmt.pop("response_format", None)
                     res = await client.post(endpoint, headers=headers, json=payload_no_fmt)
 
                 if res.status_code == 401:
@@ -133,11 +141,31 @@ class CloudAPIProvider(LLMProvider):
             raw_content = data["choices"][0]["message"]["content"]
             # Clean markdown JSON fences if present
             cleaned_json = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_content.strip(), flags=re.MULTILINE)
-            parsed = json.loads(cleaned_json)
+            try:
+                parsed = json.loads(cleaned_json)
+            except Exception:
+                json_match = re.search(r"\{[\s\S]*\}", raw_content)
+                if json_match:
+                    parsed = json.loads(json_match.group(0))
+                else:
+                    parsed = None
         except Exception as exc:
-            raise AIProviderError(f"Failed to parse structured JSON response from model: {exc}")
+            raise AIProviderError(f"Failed to read model response: {exc}")
 
-        raw_post = parsed.get("post_text", "").strip()
+        if parsed and isinstance(parsed, dict) and "post_text" in parsed:
+            raw_post = parsed.get("post_text", "").strip()
+            hashtags = parsed.get("hashtags", [])
+            project_links = parsed.get("project_links", [evidence.repo_url])
+            evidence_refs = parsed.get("evidence_references", [])
+            unverified_cautions = parsed.get("unverified_cautions", [])
+        else:
+            # Model generated plain text post directly
+            raw_post = raw_content.strip()
+            hashtags = re.findall(r"#\w+", raw_post)
+            project_links = [evidence.repo_url]
+            evidence_refs = ["README.md Repository Analysis"]
+            unverified_cautions = []
+
         sanitized_post = sanitize_linkedin_post(
             raw_post,
             repo_url=evidence.repo_url,
@@ -148,10 +176,10 @@ class CloudAPIProvider(LLMProvider):
         # Construct output
         return GeneratedDraftOutput(
             post_text=sanitized_post,
-            hashtags=parsed.get("hashtags", []),
-            project_links=parsed.get("project_links", [evidence.repo_url]),
-            evidence_references=parsed.get("evidence_references", []),
-            unverified_cautions=parsed.get("unverified_cautions", []),
+            hashtags=hashtags or ["#Python", "#OpenSource"],
+            project_links=project_links,
+            evidence_references=evidence_refs,
+            unverified_cautions=unverified_cautions,
         )
 
     def estimate_resources(self) -> dict[str, Any]:

@@ -1218,7 +1218,11 @@ function handleCloudProviderChange() {
     const baseUrlInput = document.getElementById("cloud-base-url-input");
     const presetDiv = document.getElementById("custom-provider-presets");
 
-    if (prov === "openai") {
+    if (prov === "openrouter") {
+        if (modelInput && (!modelInput.value || modelInput.value === "gpt-4o-mini")) modelInput.value = "openai/gpt-4o-mini";
+        if (baseUrlInput) baseUrlInput.value = "https://openrouter.ai/api/v1";
+        if (presetDiv) presetDiv.style.display = "flex";
+    } else if (prov === "openai") {
         if (modelInput) modelInput.value = "gpt-4o-mini";
         if (baseUrlInput) baseUrlInput.value = "https://api.openai.com/v1";
         if (presetDiv) presetDiv.style.display = "none";
@@ -1240,23 +1244,30 @@ function applyCloudPreset(name) {
     const modelInput = document.getElementById("cloud-model-input");
     const baseUrlInput = document.getElementById("cloud-base-url-input");
 
-    if (prov) prov.value = "custom_openai";
-    if (name === "nvidia") {
-        if (baseUrlInput) baseUrlInput.value = "https://integrate.api.nvidia.com/v1";
-        if (modelInput) modelInput.value = "meta/llama-3.1-8b-instruct";
-        showNotification("Applied Nvidia NIM preset (https://integrate.api.nvidia.com/v1)", "info");
-    } else if (name === "groq") {
-        if (baseUrlInput) baseUrlInput.value = "https://api.groq.com/openai/v1";
-        if (modelInput) modelInput.value = "llama-3.1-8b-instant";
-        showNotification("Applied Groq preset", "info");
-    } else if (name === "together") {
-        if (baseUrlInput) baseUrlInput.value = "https://api.together.xyz/v1";
-        if (modelInput) modelInput.value = "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo";
-        showNotification("Applied Together AI preset", "info");
-    } else if (name === "ollama") {
-        if (baseUrlInput) baseUrlInput.value = "http://127.0.0.1:11434/v1";
-        if (modelInput) modelInput.value = "llama3.1";
-        showNotification("Applied Local Ollama preset (http://127.0.0.1:11434/v1)", "info");
+    if (name === "openrouter") {
+        if (prov) prov.value = "openrouter";
+        if (baseUrlInput) baseUrlInput.value = "https://openrouter.ai/api/v1";
+        if (modelInput) modelInput.value = "openai/gpt-4o-mini";
+        showNotification("Applied OpenRouter preset (https://openrouter.ai/api/v1)", "info");
+    } else {
+        if (prov) prov.value = "custom_openai";
+        if (name === "nvidia") {
+            if (baseUrlInput) baseUrlInput.value = "https://integrate.api.nvidia.com/v1";
+            if (modelInput) modelInput.value = "meta/llama-3.1-8b-instruct";
+            showNotification("Applied Nvidia NIM preset (https://integrate.api.nvidia.com/v1)", "info");
+        } else if (name === "groq") {
+            if (baseUrlInput) baseUrlInput.value = "https://api.groq.com/openai/v1";
+            if (modelInput) modelInput.value = "llama-3.1-8b-instant";
+            showNotification("Applied Groq preset", "info");
+        } else if (name === "together") {
+            if (baseUrlInput) baseUrlInput.value = "https://api.together.xyz/v1";
+            if (modelInput) modelInput.value = "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo";
+            showNotification("Applied Together AI preset", "info");
+        } else if (name === "ollama") {
+            if (baseUrlInput) baseUrlInput.value = "http://127.0.0.1:11434/v1";
+            if (modelInput) modelInput.value = "llama3.1";
+            showNotification("Applied Local Ollama preset (http://127.0.0.1:11434/v1)", "info");
+        }
     }
 }
 

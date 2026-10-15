@@ -237,6 +237,7 @@ class EvidenceEngine:
             repo_url=project.repo_url,
             demo_url=project.demo_url,
             user_notes=project.user_notes,
+            readme_content=repo_info.readme_content,
             items=items,
         )
 

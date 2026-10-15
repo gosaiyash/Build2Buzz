@@ -22,6 +22,7 @@ class EvidencePack(BaseModel):
     repo_url: str
     demo_url: str | None = None
     user_notes: str | None = None
+    readme_content: str | None = None
     items: list[EvidenceItem] = Field(default_factory=list)
 
 

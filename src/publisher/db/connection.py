@@ -1,7 +1,7 @@
 """Database engine, connection pooling, and session management."""
 
 from collections.abc import Generator
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from src.publisher.core.config import settings
 from src.publisher.core.logging_config import logger
@@ -39,9 +39,22 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db(target_engine=None) -> None:
-    """Create all database tables."""
+    """Create all database tables and ensure backward compatible schema columns."""
     eng = target_engine or engine
     Base.metadata.create_all(bind=eng)
+
+    # Lightweight migration check for SQLite
+    try:
+        with eng.connect() as conn:
+            res = conn.execute(text("PRAGMA table_info(projects)"))
+            columns = [row[1] for row in res.fetchall()]
+            if columns and "readme_content" not in columns:
+                conn.execute(text("ALTER TABLE projects ADD COLUMN readme_content TEXT"))
+                conn.commit()
+                logger.info("Migrated projects table: added 'readme_content' column.")
+    except Exception as exc:
+        logger.debug("Schema migration notice: %s", exc)
+
     logger.info("Database initialized successfully at %s", eng.url)
 
 
