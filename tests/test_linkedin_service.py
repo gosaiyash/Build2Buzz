@@ -215,3 +215,137 @@ async def test_publishing_approved_draft_success():
         assert success is True
         assert post_urn == "urn:li:share:987654321"
         assert err_cat is None
+
+
+@pytest.mark.asyncio
+async def test_publishing_publishing_state_draft_success():
+    """Verify publishing is permitted when draft is in PUBLISHING state during the workflow."""
+    project = Project(name="TestProj", repo_url="https://github.com/example/test")
+    draft = Draft(
+        id=3,
+        project_id=1,
+        body="Approved post currently being published. https://github.com/example/test",
+        status=DraftStatus.PUBLISHING,
+    )
+
+    mock_resp = httpx.Response(
+        status_code=201,
+        headers={"x-restli-id": "urn:li:share:1122334455"},
+    )
+
+    with patch("httpx.AsyncClient.post", return_value=mock_resp):
+        success, post_urn, err_cat = await LinkedInPublishingService.publish_draft(
+            draft=draft,
+            project=project,
+            access_token="valid-token",
+            author_urn="urn:li:person:123",
+            submission_id="sub-valid-789",
+        )
+        assert success is True
+        assert post_urn == "urn:li:share:1122334455"
+        assert err_cat is None
+
+
+def test_linkedin_version_helpers():
+    """Verify dynamic active LinkedIn version computation and fallback logic."""
+    from src.publisher.core.config import (
+        get_current_linkedin_api_version,
+        get_fallback_linkedin_api_version,
+        settings,
+    )
+
+    # Dynamic version format: 6 digits (YYYYMM)
+    ver = get_current_linkedin_api_version()
+    assert len(ver) == 6
+    assert ver.isdigit()
+
+    # Fallback version for YYYYMM
+    fallback = get_fallback_linkedin_api_version("202610")
+    assert fallback == "202609"
+
+    # January rollover fallback
+    jan_fallback = get_fallback_linkedin_api_version("202601")
+    assert jan_fallback == "202512"
+
+    # Custom override via settings
+    original = settings.LINKEDIN_API_VERSION
+    try:
+        settings.LINKEDIN_API_VERSION = "202605"
+        assert get_current_linkedin_api_version() == "202605"
+    finally:
+        settings.LINKEDIN_API_VERSION = original
+
+
+@pytest.mark.asyncio
+async def test_publishing_retries_on_426_version_error():
+    """Verify publishing retries with fallback version when receiving 426 NONEXISTENT_VERSION."""
+    project = Project(name="TestProj", repo_url="https://github.com/example/test")
+    draft = Draft(
+        id=4,
+        project_id=1,
+        body="Draft testing 426 upgrade retry.",
+        status=DraftStatus.APPROVED,
+    )
+
+    resp_426 = httpx.Response(
+        status_code=426,
+        text='{"status":426,"code":"NONEXISTENT_VERSION","message":"Requested version 20240101 is not active"}',
+    )
+    resp_201 = httpx.Response(
+        status_code=201,
+        headers={"x-restli-id": "urn:li:share:retry_success"},
+    )
+
+    calls = []
+
+    async def mock_post(url, headers=None, json=None):
+        calls.append(headers.get("LinkedIn-Version"))
+        if len(calls) == 1:
+            return resp_426
+        return resp_201
+
+    with patch("httpx.AsyncClient.post", side_effect=mock_post):
+        success, post_urn, err_cat = await LinkedInPublishingService.publish_draft(
+            draft=draft,
+            project=project,
+            access_token="valid-token",
+            author_urn="urn:li:person:123",
+            submission_id="sub-426-test",
+        )
+        assert success is True
+        assert post_urn == "urn:li:share:retry_success"
+        assert err_cat is None
+        assert len(calls) == 2
+        # Verify fallback version was attempted on retry
+        assert calls[0] != calls[1]
+
+
+@pytest.mark.asyncio
+async def test_publishing_handles_persistent_426():
+    """Verify publishing returns VersionUnsupported when 426 persists after retry."""
+    project = Project(name="TestProj", repo_url="https://github.com/example/test")
+    draft = Draft(
+        id=5,
+        project_id=1,
+        body="Draft testing persistent 426 error.",
+        status=DraftStatus.APPROVED,
+    )
+
+    resp_426 = httpx.Response(
+        status_code=426,
+        text='{"status":426,"code":"NONEXISTENT_VERSION","message":"Requested version is not active"}',
+    )
+
+    with patch("httpx.AsyncClient.post", return_value=resp_426):
+        success, err_msg, err_cat = await LinkedInPublishingService.publish_draft(
+            draft=draft,
+            project=project,
+            access_token="valid-token",
+            author_urn="urn:li:person:123",
+            submission_id="sub-426-fail",
+        )
+        assert success is False
+        assert err_cat == "VersionUnsupported"
+        assert "LinkedIn API version error" in err_msg
+
+

@@ -58,3 +58,42 @@ async def test_upload_image_to_linkedin_mocked(tmp_path):
             author_urn="urn:li:person:123",
         )
         assert urn == "urn:li:image:12345"
+        # Check that LinkedIn-Version header was sent and is a valid 6-digit YYYYMM format
+        call_headers = mock_post.call_args.kwargs["headers"]
+        assert "LinkedIn-Version" in call_headers
+        assert len(call_headers["LinkedIn-Version"]) == 6
+        assert call_headers["LinkedIn-Version"] != "202401"
+
+
+@pytest.mark.asyncio
+async def test_upload_image_retries_on_426_version_error(tmp_path):
+    """Verify MediaService retries on 426 NONEXISTENT_VERSION."""
+    test_img = tmp_path / "demo.png"
+    test_img.write_bytes(b"\x89PNG" + b"\x00" * 50)
+
+    resp_426 = httpx.Response(status_code=426, text='{"status":426,"code":"NONEXISTENT_VERSION"}')
+    init_resp = httpx.Response(
+        status_code=200,
+        json={"value": {"uploadUrl": "https://upload.example.com/binary", "image": "urn:li:image:retry_img"}},
+    )
+    put_resp = httpx.Response(status_code=200)
+
+    post_calls = []
+
+    async def mock_post(url, headers=None, json=None):
+        post_calls.append(headers.get("LinkedIn-Version"))
+        if len(post_calls) == 1:
+            return resp_426
+        return init_resp
+
+    with patch("httpx.AsyncClient.post", side_effect=mock_post), \
+         patch("httpx.AsyncClient.put", new_callable=AsyncMock, return_value=put_resp):
+        urn = await MediaService.upload_image_to_linkedin(
+            file_path=str(test_img),
+            access_token="mock-token",
+            author_urn="urn:li:person:123",
+        )
+        assert urn == "urn:li:image:retry_img"
+        assert len(post_calls) == 2
+        assert post_calls[0] != post_calls[1]
+

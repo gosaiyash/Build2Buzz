@@ -9,6 +9,10 @@ from typing import Any
 from urllib.parse import quote, urlencode
 import httpx
 from pydantic import BaseModel
+from src.publisher.core.config import (
+    get_current_linkedin_api_version,
+    get_fallback_linkedin_api_version,
+)
 from src.publisher.core.logging_config import logger
 from src.publisher.db.models import Draft, DraftStatus, Project
 
@@ -235,7 +239,14 @@ class LinkedInPublishingService:
     """Service publishing approved drafts using LinkedIn's official REST API."""
 
     POSTS_API_URL = "https://api.linkedin.com/rest/posts"
-    API_VERSION = "202401"
+    API_VERSION: str | None = None
+
+    @classmethod
+    def get_api_version(cls) -> str:
+        """Resolve active LinkedIn API version."""
+        if cls.API_VERSION:
+            return cls.API_VERSION
+        return get_current_linkedin_api_version()
 
     @classmethod
     async def publish_draft(
@@ -255,7 +266,7 @@ class LinkedInPublishingService:
         - Returns (success, linkedin_post_id_or_error, error_category).
         """
         # Invariant 1: Approval check
-        if draft.status != DraftStatus.APPROVED:
+        if draft.status not in (DraftStatus.APPROVED, DraftStatus.PUBLISHING):
             return (
                 False,
                 f"Publishing blocked: Draft #{draft.id} is in '{draft.status.value}' state. "
@@ -311,9 +322,10 @@ class LinkedInPublishingService:
             except Exception as media_err:
                 logger.warning("Could not upload attached screenshot to LinkedIn: %s. Continuing with text post.", media_err)
 
+        active_version = cls.get_api_version()
         headers = {
             "Authorization": f"Bearer {access_token}",
-            "LinkedIn-Version": cls.API_VERSION,
+            "LinkedIn-Version": active_version,
             "X-Restli-Protocol-Version": "2.0.0",
             "Content-Type": "application/json",
             "User-Agent": "Build2Buzz/1.0",
@@ -321,15 +333,29 @@ class LinkedInPublishingService:
         }
 
         logger.info(
-            "Submitting LinkedIn post for Draft #%d (Submission: %s, Author: %s)",
+            "Submitting LinkedIn post for Draft #%d (Submission: %s, Author: %s, Version: %s)",
             draft.id,
             submission_id,
             author_urn,
+            active_version,
         )
 
         try:
             async with httpx.AsyncClient(timeout=20.0) as client:
                 res = await client.post(cls.POSTS_API_URL, headers=headers, json=payload)
+
+                # Fallback on 426 (NONEXISTENT_VERSION): retry once with adjacent fallback active version
+                if res.status_code == 426:
+                    fallback_version = get_fallback_linkedin_api_version(active_version)
+                    if fallback_version != active_version:
+                        logger.warning(
+                            "LinkedIn API version '%s' returned 426 (%s). Retrying with fallback version '%s'...",
+                            active_version,
+                            res.text[:120],
+                            fallback_version,
+                        )
+                        headers["LinkedIn-Version"] = fallback_version
+                        res = await client.post(cls.POSTS_API_URL, headers=headers, json=payload)
 
                 # LinkedIn REST Posts API returns 201 Created on success
                 if res.status_code == 201:
@@ -355,6 +381,14 @@ class LinkedInPublishingService:
                         False,
                         "Permission denied. Ensure your LinkedIn Developer app has 'Share on LinkedIn' (w_member_social) enabled.",
                         "PermissionDenied",
+                    )
+
+                elif res.status_code == 426:
+                    logger.error("LinkedIn API version unsupported: %s", res.text[:200])
+                    return (
+                        False,
+                        f"LinkedIn API version error: The requested API version is not active. Response: {res.text[:200]}",
+                        "VersionUnsupported",
                     )
 
                 elif res.status_code == 429:

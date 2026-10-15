@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Any
 import httpx
 from pydantic import BaseModel
+from src.publisher.core.config import (
+    get_current_linkedin_api_version,
+    get_fallback_linkedin_api_version,
+)
 from src.publisher.core.logging_config import logger
 
 
@@ -134,16 +138,28 @@ class MediaService:
                 "owner": author_urn,
             }
         }
+        active_version = get_current_linkedin_api_version()
         headers = {
             "Authorization": f"Bearer {access_token}",
-            "LinkedIn-Version": "202401",
+            "LinkedIn-Version": active_version,
             "X-Restli-Protocol-Version": "2.0.0",
             "Content-Type": "application/json",
         }
 
-        logger.info("Initializing image upload with LinkedIn for: %s", file_path)
+        logger.info("Initializing image upload with LinkedIn (Version %s) for: %s", active_version, file_path)
         async with httpx.AsyncClient(timeout=30.0) as client:
             res = await client.post(init_url, headers=headers, json=init_payload)
+            if res.status_code == 426:
+                fallback_version = get_fallback_linkedin_api_version(active_version)
+                if fallback_version != active_version:
+                    logger.warning(
+                        "LinkedIn image upload initialization version '%s' returned 426. Retrying with '%s'...",
+                        active_version,
+                        fallback_version,
+                    )
+                    headers["LinkedIn-Version"] = fallback_version
+                    res = await client.post(init_url, headers=headers, json=init_payload)
+
             if res.status_code != 200:
                 raise ValueError(f"LinkedIn image upload initialization failed ({res.status_code}): {res.text[:150]}")
 
