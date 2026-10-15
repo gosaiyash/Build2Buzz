@@ -28,7 +28,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Tab Navigation
+// Tab Navigation & Mobile Drawer
+function toggleSidebar() {
+    const sidebar = document.getElementById("app-sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    const toggleBtn = document.getElementById("mobile-nav-toggle");
+    if (!sidebar) return;
+    const isOpen = sidebar.classList.toggle("open");
+    if (backdrop) backdrop.classList.toggle("active", isOpen);
+    if (toggleBtn) toggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    document.body.classList.toggle("sidebar-locked", isOpen);
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById("app-sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    const toggleBtn = document.getElementById("mobile-nav-toggle");
+    if (sidebar) sidebar.classList.remove("open");
+    if (backdrop) backdrop.classList.remove("active");
+    if (toggleBtn) toggleBtn.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("sidebar-locked");
+}
+
 function initNavigation() {
     const navItems = document.querySelectorAll(".nav-item");
     const tabPanels = document.querySelectorAll(".tab-panel");
@@ -49,10 +70,23 @@ function initNavigation() {
             const tabName = item.querySelector("span")?.textContent || "Dashboard";
             if (topbarTitle) topbarTitle.textContent = tabName;
 
+            // Close mobile sidebar if open
+            closeSidebar();
+
             if (targetTab === "editor" && !currentDraftId) {
                 autoLoadActiveOrLatestDraft();
             }
         });
+    });
+
+    // Close sidebar on Escape key
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeSidebar();
+            if (typeof closeMediaSelectorModal === "function") {
+                closeMediaSelectorModal();
+            }
+        }
     });
 }
 
