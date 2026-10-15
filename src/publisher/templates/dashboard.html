@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- TAB A: DASHBOARD -->
+<div id="tab-dashboard" class="tab-panel active">
+    <!-- Metrics Grid -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">Projects Analyzed</div>
+            <div id="metric-total-projects" class="metric-value">0</div>
+            <div class="metric-sub">Across GitHub repositories</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Drafts Generated</div>
+            <div id="metric-total-drafts" class="metric-value">0</div>
+            <div class="metric-sub">Across all post styles</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Awaiting Approval</div>
+            <div id="metric-awaiting-approval" class="metric-value">0</div>
+            <div class="metric-sub">Human-in-the-loop review</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Published to LinkedIn</div>
+            <div id="metric-published-count" class="metric-value">0</div>
+            <div class="metric-sub">Official API verified</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Publish Failures</div>
+            <div id="metric-failed-count" class="metric-value">0</div>
+            <div class="metric-sub">Safe rollback preserved</div>
+        </div>
+    </div>
+
+    <!-- System Status Row -->
+    <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+            <h2 class="card-title">Integration & Environment Status</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm);">
+                <span>Current AI Mode:</span>
+                <span id="dash-ai-mode" class="badge badge-info">Cloud API</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm);">
+                <span>GitHub Connection:</span>
+                <span id="dash-github-status" class="badge badge-neutral">Public (Unauth)</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm);">
+                <span>LinkedIn OAuth:</span>
+                <span id="dash-linkedin-status" class="badge badge-neutral">Not Connected</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm);">
+                <span>Local Server:</span>
+                <span class="badge badge-success">127.0.0.1:8000</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB B: PROJECTS -->
+<div id="tab-projects" class="tab-panel">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Analyze New Repository</h2>
+        </div>
+        <form id="form-analyze-project" onsubmit="handleAnalyzeSubmit(event)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="project-repo-url">GitHub Repository URL *</label>
+                    <input type="url" id="project-repo-url" class="form-control" placeholder="https://github.com/owner/repository" required>
+                    <span class="form-hint">Reads README.md and repository metadata via GitHub official REST API</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="project-demo-url">Working Demo URL (Optional)</label>
+                    <input type="url" id="project-demo-url" class="form-control" placeholder="https://demo.example.com">
+                    <span class="form-hint">Controlled headless browser inspection with SSRF defenses</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="project-user-notes">Context, Key Highlights or Personal Notes (Optional)</label>
+                <textarea id="project-user-notes" class="form-textarea" placeholder="E.g., Built this over the weekend to solve X, learned Y about concurrency..."></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="project-post-style">Post Style</label>
+                    <select id="project-post-style" class="form-select">
+                        <option value="professional">Professional & Technical Impact</option>
+                        <option value="developer">Developer-Focused Deep Dive</option>
+                        <option value="showcase">Product & Project Showcase</option>
+                        <option value="learning">Learning Journey & Behind-the-Scenes</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-top: 1rem;">
+                        <input type="checkbox" id="project-web-research" style="accent-color: var(--accent-indigo);">
+                        <span style="font-size: 0.9rem;">Enable Live Web Research (Optional)</span>
+                    </label>
+                    <span class="form-hint">Enriches facts with verified external documentation if configured</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                <button type="submit" id="btn-start-analysis" class="btn btn-primary">
+                    🚀 Start Analysis & Evidence Extraction
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h2 class="card-title">Analyzed Projects</h2>
+            <button class="btn btn-secondary btn-sm" onclick="loadProjectsList()">Refresh</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Project Name</th>
+                        <th>Repository URL</th>
+                        <th>Demo Link</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="projects-table-body">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading projects...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- TAB C: PROJECT ANALYSIS -->
+<div id="tab-analysis" class="tab-panel">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title" id="analysis-view-title">Project Evidence & Analysis Report</h2>
+            <span id="analysis-status-badge" class="badge badge-neutral">No Project Selected</span>
+        </div>
+        <div id="analysis-empty-state" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+            Select a project from the Projects tab or start an analysis to inspect its evidence breakdown.
+        </div>
+        <div id="analysis-content" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <h3 style="font-size: 1rem; color: var(--accent-indigo); margin-bottom: 0.75rem;">Documented README Facts</h3>
+                    <div id="analysis-readme-summary" class="evidence-panel" style="max-height: 250px;"></div>
+                </div>
+                <div>
+                    <h3 style="font-size: 1rem; color: var(--accent-cyan); margin-bottom: 0.75rem;">Observed Demo Findings</h3>
+                    <div id="analysis-demo-summary" class="evidence-panel" style="max-height: 250px;"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <h3 style="font-size: 1rem; color: var(--accent-emerald); margin-bottom: 0.75rem;">Verified Technologies & Features</h3>
+                    <div id="analysis-tech-summary" class="card" style="background: rgba(15,23,42,0.4); padding: 1rem;"></div>
+                </div>
+                <div>
+                    <h3 style="font-size: 1rem; color: var(--accent-rose); margin-bottom: 0.75rem;">Unverified Claims & Cautions</h3>
+                    <div id="analysis-cautions-summary" class="card" style="background: rgba(15,23,42,0.4); padding: 1rem;"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem;" id="analysis-screenshot-container">
+                <h3 style="font-size: 1rem; color: var(--text-muted); margin-bottom: 0.75rem;">Demo Screenshot</h3>
+                <div id="analysis-screenshot" style="border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border-color); max-width: 600px;"></div>
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="generateDraftFromCurrentProject()">
+                    ✨ Generate LinkedIn Post Draft
+                </button>
+                <button class="btn btn-secondary" onclick="switchToTab('editor')">
+                    ✍️ Open in Post Editor
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB D: AI SETTINGS -->
+<div id="tab-ai-settings" class="tab-panel">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">AI Provider & Inference Mode</h2>
+            <span class="badge badge-warning">Mutually Exclusive Modes</span>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+            Select your active AI engine. Exactly one inference mode is active at any time. The system will never silently fall back between cloud and local inference.
+        </p>
+
+        <!-- Exclusive Selector -->
+        <div class="radio-cards">
+            <label id="card-mode-cloud" class="radio-card active">
+                <input type="radio" name="ai_mode" id="ai-mode-cloud" value="cloud" checked>
+                <div>
+                    <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem;">Cloud AI API</div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted);">
+                        Connect to OpenAI, Google Gemini, Anthropic, or compatible cloud LLM providers via API.
+                    </div>
+                </div>
+            </label>
+            <label id="card-mode-local" class="radio-card">
+                <input type="radio" name="ai_mode" id="ai-mode-local" value="local">
+                <div>
+                    <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem;">Local GGUF LLM</div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted);">
+                        100% private, on-device inference using GGUF quantized models via llama-cpp-python.
+                    </div>
+                </div>
+            </label>
+        </div>
+
+        <!-- Cloud Configuration Subpanel -->
+        <div id="ai-config-cloud">
+            <h3 style="font-size: 1rem; color: var(--accent-indigo); margin-bottom: 1rem;">Cloud Provider Settings</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="cloud-provider-select">Provider</label>
+                    <select id="cloud-provider-select" class="form-select" onchange="handleCloudProviderChange()">
+                        <option value="openai">OpenAI (GPT-4o, GPT-4o-mini)</option>
+                        <option value="gemini">Google Gemini (Gemini 1.5 Flash / Pro)</option>
+                        <option value="anthropic">Anthropic (Claude 3.5 Sonnet / Haiku)</option>
+                        <option value="custom_openai">Custom OpenAI-Compatible API</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="cloud-model-input">Model Name</label>
+                    <input type="text" id="cloud-model-input" class="form-control" value="gpt-4o-mini">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="cloud-base-url-input">API Base URL (Optional / Custom)</label>
+                <input type="url" id="cloud-base-url-input" class="form-control" placeholder="https://api.openai.com/v1">
+                <div id="custom-provider-presets" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">Quick Presets:</span>
+                    <span class="preset-pill" onclick="applyCloudPreset('nvidia')">Nvidia NIM</span>
+                    <span class="preset-pill" onclick="applyCloudPreset('groq')">Groq</span>
+                    <span class="preset-pill" onclick="applyCloudPreset('together')">Together</span>
+                    <span class="preset-pill" onclick="applyCloudPreset('ollama')">Local Ollama</span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="cloud-api-key-input">API Key <span id="cloud-key-status" style="font-weight: normal; color: var(--accent-cyan);"></span></label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="password" id="cloud-api-key-input" class="form-control" placeholder="Enter new API key to update Windows Credential Manager">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="togglePasswordVisibility('cloud-api-key-input')" title="Show / Hide Key">👁️</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="clearCloudApiKey()" title="Remove saved key">Clear</button>
+                    </div>
+                    <span class="form-hint">Stored strictly in Windows Credential Manager. Never saved in plaintext SQLite, files, or browser storage.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="cloud-timeout-input">Timeout (Seconds)</label>
+                    <input type="number" id="cloud-timeout-input" class="form-control" value="120" min="15" max="300">
+                    <span class="form-hint">Prevents 45s timeout drops on complex models</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" id="btn-save-cloud" class="btn btn-primary" onclick="saveCloudAiSettings()">Save Settings</button>
+                <button type="button" id="btn-test-cloud" class="btn btn-secondary" onclick="testCloudAiConnection()">Test Connection</button>
+            </div>
+        </div>
+
+        <!-- Local Configuration Subpanel -->
+        <div id="ai-config-local" style="display: none;">
+            <h3 style="font-size: 1rem; color: var(--accent-cyan); margin-bottom: 1rem;">Local GGUF Model Settings</h3>
+            
+            <div class="alert alert-warning">
+                <span>⚠️ Local GGUF models require significant RAM and compute resources. Ensure your system meets the requirements of the selected model.</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="local-model-path">GGUF Model File Path *</label>
+                <input type="text" id="local-model-path" class="form-control" placeholder="C:\Models\Meta-Llama-3-8B-Instruct.Q4_K_M.gguf">
+                <span class="form-hint">Specify an absolute path to a valid .gguf model file on your local disk.</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="local-context-length">Context Length (Tokens)</label>
+                    <input type="number" id="local-context-length" class="form-control" value="4096" min="1024" max="32768">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="local-gpu-layers">GPU Offload Layers (n_gpu_layers)</label>
+                    <input type="number" id="local-gpu-layers" class="form-control" value="0" min="0" max="100">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-primary" onclick="saveLocalAiSettings()">Save & Validate Path</button>
+                <button type="button" class="btn btn-secondary" onclick="testLocalModelLoad()">Test Model Loading</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB E: GENERATION SETTINGS -->
+<div id="tab-gen-settings" class="tab-panel">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">LinkedIn Post Generation Preferences</h2>
+        </div>
+        <form id="form-gen-preferences" onsubmit="saveGenPreferences(event)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="gen-default-style">Default Writing Style</label>
+                    <select id="gen-default-style" class="form-select">
+                        <option value="professional">Professional & Technical Impact</option>
+                        <option value="developer">Developer-Focused Deep Dive</option>
+                        <option value="showcase">Product & Project Showcase</option>
+                        <option value="learning">Learning Journey & Behind-the-Scenes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="gen-language">Post Language</label>
+                    <input type="text" id="gen-language" class="form-control" value="English">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="gen-target-audience">Target Audience</label>
+                    <input type="text" id="gen-target-audience" class="form-control" value="Software Engineers, Tech Leads, Hiring Managers">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="gen-max-length">Max Post Character Length</label>
+                    <input type="number" id="gen-max-length" class="form-control" value="2000" min="500" max="3000">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="gen-custom-instructions">Custom Writing Instructions</label>
+                <textarea id="gen-custom-instructions" class="form-textarea" placeholder="E.g., Emphasize performance benchmarks, maintain an humble but confident tone, avoid marketing buzzwords..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="gen-hashtag-prefs">Hashtag Preferences</label>
+                <input type="text" id="gen-hashtag-prefs" class="form-control" value="#Python #SoftwareEngineering #OpenSource #AI #WebDev">
+            </div>
+
+            <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="gen-include-links" checked style="accent-color: var(--accent-indigo);">
+                    <span style="font-size: 0.9rem;">Include GitHub and Demo links in post body</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="gen-include-screenshot" checked style="accent-color: var(--accent-indigo);">
+                    <span style="font-size: 0.9rem;">Attach Demo Screenshot when available</span>
+                </label>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">Save Preferences</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- TAB F: POST EDITOR -->
+<div id="tab-editor" class="tab-panel">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">LinkedIn Post Draft Editor</h2>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span id="draft-approval-badge" class="badge badge-warning">Draft: GENERATED</span>
+            </div>
+        </div>
+
+        <div class="editor-layout">
+            <!-- Left: Editable Draft -->
+            <div>
+                <div class="form-group">
+                    <label class="form-label" for="post-body">Post Content (LinkedIn Format)</label>
+                    <textarea id="post-body" class="form-textarea" style="min-height: 320px; font-size: 0.95rem; line-height: 1.6;" placeholder="Generated LinkedIn post draft will appear here..."></textarea>
+                    <div id="char-count" class="char-counter">0 / 3000 characters</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="post-github-url">GitHub Repository Link <span style="font-weight: normal; color: var(--accent-cyan);">(Auto-Selected from Project)</span></label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="url" id="post-github-url" class="form-control" readonly style="background: rgba(0,0,0,0.4); color: var(--accent-cyan);" placeholder="Auto-populated from project">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertRepoLinkIntoDraft()" title="Append link to post body" style="white-space: nowrap;">🔗 Insert in Post</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="post-demo-url">Live Demo Link <span style="font-weight: normal; color: var(--text-muted);">(Optional)</span></label>
+                        <input type="url" id="post-demo-url" class="form-control" readonly style="background: rgba(0,0,0,0.4);" placeholder="Auto-populated if demo analyzed">
+                    </div>
+                </div>
+
+                <!-- Validation Warnings Panel -->
+                <div id="editor-validation-warnings" style="margin-top: 1rem; display: none;"></div>
+
+                <!-- Action Controls -->
+                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="saveDraftEdits()">💾 Save Draft</button>
+                    <button type="button" class="btn btn-secondary" onclick="regenerateDraft()">🔄 Regenerate</button>
+                    <button type="button" class="btn btn-secondary" onclick="validateCurrentDraft()">🛡️ Validate Draft</button>
+                    <button type="button" id="btn-approve-draft" class="btn btn-primary" onclick="approveCurrentDraft()">✅ Approve Post</button>
+                    <button type="button" id="btn-publish-draft" class="btn btn-success" disabled onclick="publishCurrentDraft()">🚀 Publish to LinkedIn</button>
+                </div>
+            </div>
+
+            <!-- Right: Evidence & Media Preview -->
+            <div>
+                <h3 style="font-size: 1rem; color: var(--accent-indigo); margin-bottom: 0.75rem;">Supporting Evidence</h3>
+                <div id="editor-evidence-list" class="evidence-panel">
+                    <div style="color: var(--text-dim); text-align: center; padding: 2rem;">
+                        No evidence linked to current draft.
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; margin-bottom: 0.75rem;">
+                    <h3 style="font-size: 1rem; color: var(--accent-cyan); margin: 0;">Attached Media</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="openMediaSelectorModal()" title="Pick from repo assets or demo screenshots">
+                            🖼️ Repo / System
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="triggerExternalMediaUpload()" title="Upload a photo or video from disk">
+                            📁 Upload Media
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hidden file input for external photo/video upload -->
+                <input type="file" id="media-file-input" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime" style="display: none;" onchange="handleExternalMediaSelected(this)">
+
+                <!-- Attached Media Container -->
+                <div id="editor-media-preview" class="media-container-box">
+                    <div class="empty-media-state">
+                        <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">📷</div>
+                        <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem; font-size: 0.92rem;">No Media Attached</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                            Attach a screenshot, repo image, or demo video to preview before posting.
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="triggerExternalMediaUpload()">
+                                📁 Upload Photo / Video
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openMediaSelectorModal()">
+                                🖼️ Choose from System / Repo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB G: INTEGRATIONS -->
+<div id="tab-integrations" class="tab-panel">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- GitHub Integration -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">GitHub Integration</h2>
+                <span id="github-auth-badge" class="badge badge-neutral">Public Access</span>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+                GitHub Public REST API works without authentication (60 req/hr). Add a Personal Access Token (PAT) for private repo support and 5,000 req/hr.
+            </p>
+            <div class="form-group">
+                <label class="form-label" for="github-pat-token">GitHub Personal Access Token (Optional)</label>
+                <input type="password" id="github-pat-token" class="form-control" placeholder="ghp_xxxxxxxxxxxx (stored in Windows Credential Manager)">
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="saveGitHubCredentials()">Save Token</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="testGitHubConnection()">Test Connection</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeGitHubCredentials()">Remove</button>
+            </div>
+        </div>
+
+        <!-- LinkedIn OAuth Integration -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">LinkedIn Official API Authorization</h2>
+                <span id="linkedin-status-badge" class="badge badge-neutral">Not Connected</span>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Connect your LinkedIn profile using official OAuth 2.0. Choose between Native PKCE (recommended for Windows local apps) or Standard Web OAuth.
+            </p>
+
+            <!-- Important Redirect URI Notice for LinkedIn Developer Portal -->
+            <div class="alert alert-info" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; background: rgba(99, 102, 241, 0.15); border-left: 4px solid var(--accent-indigo);">
+                <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
+                    📌 Step 1: Register Authorized Redirect URL in LinkedIn Developer Portal
+                </div>
+                <div style="font-size: 0.86rem; line-height: 1.5; color: #e2e8f0;">
+                    To prevent <em>"The redirect_uri does not match the registered value"</em>, this exact URL must be registered in your LinkedIn App:<br>
+                    1. Open the <a href="https://www.linkedin.com/developers/apps" target="_blank" style="color: var(--accent-cyan); text-decoration: underline; font-weight: 600;">LinkedIn Developer Portal</a> &rarr; select your App &rarr; go to the <strong>Auth</strong> tab.<br>
+                    2. Under <strong>OAuth 2.0 settings</strong>, find <strong>Authorized redirect URLs for your app</strong>.<br>
+                    3. Click the <strong>pencil (Edit)</strong> icon, click <strong>+ Add redirect URL</strong>, paste the exact URL below, and click <strong>Update/Save</strong>:
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="linkedin-redirect-uri" class="form-control" style="font-family: monospace; font-size: 0.88rem; background: rgba(0,0,0,0.5); color: var(--accent-cyan);" value="http://127.0.0.1:8000/api/integrations/linkedin/callback">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyRedirectUri()">📋 Copy URL</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                    <span>If you registered <code>localhost</code> instead of <code>127.0.0.1</code> in LinkedIn, switch here:</span>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="setRedirectUriMode('127.0.0.1')">127.0.0.1</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="setRedirectUriMode('localhost')">localhost</button>
+                </div>
+            </div>
+
+            <!-- Flow Mode Selector & Credentials -->
+            <div style="font-weight: 600; margin-bottom: 0.75rem; color: #fff;">
+                📌 Step 2: Select Authorization Flow & Credentials
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="linkedin-flow-type">Authorization Protocol</label>
+                    <select id="linkedin-flow-type" class="form-select" onchange="toggleLinkedInFlowFields()">
+                        <option value="native_pkce" selected>Native OAuth 2.0 with PKCE (No OpenID required, for local apps)</option>
+                        <option value="standard">Standard Web OAuth 2.0 (OpenID + Publishing)</option>
+                    </select>
+                    <span class="form-hint" id="flow-hint">PKCE requests only <code>w_member_social</code>, avoiding the <em>"Open ID permission is not supported for PKCE flows"</em> error.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="linkedin-client-id">LinkedIn Client ID *</label>
+                    <input type="text" id="linkedin-client-id" class="form-control" placeholder="E.g. 78xxxxxxxxxxxx">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="linkedin-client-secret">LinkedIn Primary Client Secret <span id="secret-optional-label" style="font-weight: normal; color: var(--text-muted);">(Optional for PKCE)</span></label>
+                    <input type="password" id="linkedin-client-secret" class="form-control" placeholder="E.g. WPL_AP1.xxxxxxxx (stored in Windows Credential Manager)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="linkedin-author-urn">Author Person URN / Member ID <span style="font-weight: normal; color: var(--text-muted);">(Optional: e.g. urn:li:person:abcdef)</span></label>
+                    <input type="text" id="linkedin-author-urn" class="form-control" placeholder="Optional author URN for PKCE posting">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="startLinkedInOAuth()">🔗 Authorize LinkedIn Profile</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="saveLinkedInAuthorUrn()">💾 Save Author URN</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="testLinkedInConnection()">Test Status</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="disconnectLinkedIn()">Revoke / Disconnect</button>
+            </div>
+        </div>
+
+        <!-- Web Search Integration -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Optional Web Search Provider</h2>
+                <span id="search-status-badge" class="badge badge-neutral">Disabled</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="search-provider-select">Search Provider</label>
+                    <select id="search-provider-select" class="form-select">
+                        <option value="none">Disabled (No external web queries)</option>
+                        <option value="tavily">Tavily Search API</option>
+                        <option value="serpapi">SerpAPI</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="search-api-key">Search API Key</label>
+                    <input type="password" id="search-api-key" class="form-control" placeholder="Search API Key (stored in Windows Credential Manager)">
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="saveSearchSettings()">Save Search Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB H: HISTORY -->
+<div id="tab-history" class="tab-panel">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Draft & Publishing History</h2>
+            <button class="btn btn-secondary btn-sm" onclick="loadHistoryList()">Refresh History</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Draft ID</th>
+                        <th>Project</th>
+                        <th>AI Mode</th>
+                        <th>State</th>
+                        <th>Timestamp</th>
+                        <th>LinkedIn Post ID</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                    <tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading history...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Choose from System / Repo Media -->
+<div id="media-selector-modal" class="custom-modal-backdrop" style="display: none;" onclick="handleModalBackdropClick(event)">
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-header">
+            <div>
+                <h3 style="margin: 0; color: #fff; font-size: 1.15rem; font-weight: 700;">Select Project or System Media</h3>
+                <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
+                    Choose an image or video discovered from the repository, demo screenshots, or uploaded media.
+                </div>
+            </div>
+            <button type="button" class="btn-close" onclick="closeMediaSelectorModal()">✕</button>
+        </div>
+        <div class="custom-modal-body">
+            <div id="media-modal-loading" style="display: none; text-align: center; padding: 2rem;">
+                <div class="spinner-ring" style="width: 36px; height: 36px; margin: 0 auto 0.75rem auto;"></div>
+                <div style="color: var(--text-muted); font-size: 0.9rem;">Scanning project screenshots and repository assets...</div>
+            </div>
+            <div id="media-modal-empty" style="display: none; text-align: center; padding: 2.5rem 1rem;">
+                <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🖼️</div>
+                <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem;">No Pre-existing Media Found</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                    No repository images or demo screenshots were found for this project yet.
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" onclick="closeMediaSelectorModal(); triggerExternalMediaUpload();">
+                    📁 Upload from Computer Instead
+                </button>
+            </div>
+            <div id="media-grid" class="media-gallery-grid"></div>
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeMediaSelectorModal()">Close</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="closeMediaSelectorModal(); triggerExternalMediaUpload();">📁 Upload New File</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

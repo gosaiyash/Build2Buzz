@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title | default("GitHub LinkedIn AI Publisher") }}</title>
+    <meta name="description" content="Local-first AI publisher reading GitHub READMEs, inspecting demos, and crafting approved LinkedIn posts.">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">⚡</div>
+                <div class="brand-title">Build2Buzz</div>
+            </div>
+
+            <ul class="nav-links">
+                <li><a class="nav-item active" data-tab="dashboard"><span>📊 Dashboard</span></a></li>
+                <li><a class="nav-item" data-tab="projects"><span>📁 Projects</span></a></li>
+                <li><a class="nav-item" data-tab="analysis"><span>🔍 Analysis</span></a></li>
+                <li><a class="nav-item" data-tab="editor"><span>✍️ Post Editor</span></a></li>
+                <li><a class="nav-item" data-tab="ai-settings"><span>🤖 AI Settings</span></a></li>
+                <li><a class="nav-item" data-tab="gen-settings"><span>⚙️ Post Preferences</span></a></li>
+                <li><a class="nav-item" data-tab="integrations"><span>🔗 Integrations</span></a></li>
+                <li><a class="nav-item" data-tab="history"><span>📜 History</span></a></li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div id="server-status-badge" class="badge-status">
+                    <span class="status-dot"></span> Online (127.0.0.1:8000)
+                </div>
+                <div>Local-first &bull; Windows Secure</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-wrapper">
+            <header class="topbar">
+                <h1 id="topbar-title" class="topbar-title">Dashboard</h1>
+                <div class="topbar-actions">
+                    <span id="active-ai-badge" class="badge badge-info">AI: Cloud Mode</span>
+                    <button class="btn btn-primary btn-sm" onclick="document.querySelector('[data-tab=\'projects\']').click();">
+                        + New Project
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <div id="notification-banner" class="alert" style="display: none;"></div>
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Global Floating Toast Notification Container (Fixed top-right, always visible) -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- Global AI Generation Loading Modal Overlay (Always centered, live elapsed timer) -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-card">
+            <div class="spinner-ring"></div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: #fff;" id="loading-title">Generating LinkedIn Post Draft</div>
+            <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;" id="loading-message">
+                Synthesizing verified repository evidence with the active AI model...
+            </div>
+            <div style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-sm); padding: 0.5rem 1rem; color: var(--accent-cyan); font-family: monospace; font-size: 0.95rem; font-weight: 600;" id="loading-timer">
+                ⏳ Elapsed: 0s
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-dim);" id="loading-hint">
+                On-device models run privately via CPU and typically take 15–35 seconds.
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

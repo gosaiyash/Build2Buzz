@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.venv/
+env/
+venv/
+ENV/
+
+# Environment and Secrets (Keys, Tokens, Encrypted files)
+.env
+.env.*
+!.env.example
+*.local
+credentials.json
+*.key
+*.pem
+*.enc
+.secrets.enc
+
+# Database & Local Runtime Data
+*.sqlite3
+*.db
+data/
+
+# Model Files (large weights)
+*.gguf
+*.bin
+*.pt
+*.onnx
+
+# Temporary, Logs & Scratch
+scratch/
+*.log
+
+# Playwright & Screenshots
+screenshots/
+test-results/
+playwright-report/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store
