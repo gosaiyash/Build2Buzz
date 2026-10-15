@@ -1,10 +1,10 @@
-# ⚡ GitHub LinkedIn AI Publisher (Build2Buzz)
+# GitHub LinkedIn AI Publisher (Build2Buzz)
 
 A modular, local-first Windows application that reads a project's GitHub README, inspects its working demo using controlled browser automation, enriches facts with optional web research, and drafts high-impact LinkedIn posts using a configurable AI provider—publishing **only after explicit human approval** via LinkedIn's official REST API.
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 - **Local-First & Secure:** Binds strictly to `127.0.0.1:8000`. Sensitive API keys and OAuth tokens are stored exclusively in the **Windows Credential Manager** via `keyring`—never in SQLite, config files, browser local storage, or logs.
 - **GitHub Ingestion:** Fetches README and repository metadata directly from the official GitHub REST API (public repos unauthenticated; private repos authenticated via PAT).
@@ -16,7 +16,7 @@ A modular, local-first Windows application that reads a project's GitHub README,
 
 ---
 
-## 🏛️ Architecture Overview
+## Architecture Overview
 
 ```mermaid
 graph TD
@@ -56,7 +56,7 @@ graph TD
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 1. **Windows 10/11 (64-bit)**
 2. **Python 3.11** (recommended; Python 3.11.9 verified)
@@ -66,7 +66,7 @@ graph TD
 
 ---
 
-## 🚀 Quick Start (Windows CMD)
+## Quick Start (Windows CMD)
 
 ### 1. Setup the Environment
 Open Windows Command Prompt (CMD), navigate to the project directory, and run:
@@ -86,7 +86,7 @@ Start the server and automatically launch the dashboard in your default browser:
 run.bat
 ```
 The application will be accessible at:
-👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+ **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
 
 ### 3. Run the Automated Test Suite
 To verify the entire test suite (42 unit, integration, and security tests):
@@ -96,7 +96,7 @@ test.bat
 
 ---
 
-## ⚙️ Configuration & Credentials
+## Configuration & Credentials
 
 All sensitive credentials are stored directly in **Windows Credential Manager** under the service name `GitHubLinkedInAIPublisher`.
 
@@ -112,7 +112,7 @@ Non-secret preferences and database records are stored locally in `data/publishe
 
 ---
 
-## 🔒 Security Model
+## Security Model
 
 - **Localhost-Only Enforcement:** FastAPI application verifies incoming `Host` headers and rejects any requests outside `127.0.0.1` and `localhost`.
 - **SSRF Defense:** All user-provided demo URLs and external research URLs undergo DNS resolution checks, rejecting private addresses (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), and non-standard dangerous ports.
@@ -121,7 +121,7 @@ Non-secret preferences and database records are stored locally in `data/publishe
 
 ---
 
-## 📚 Detailed Documentation
+## Detailed Documentation
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): Deep architectural specification and data flow.
 - [docs/SECURITY.md](docs/SECURITY.md): Threat model, SSRF safeguards, and credential isolation.
@@ -131,7 +131,7 @@ Non-secret preferences and database records are stored locally in `data/publishe
 
 ---
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 - **`Python 3.11 not found`:** Install Python 3.11 from python.org and check "Add Python to PATH" during installation.
 - **`Playwright Chromium download failed`:** Run `.venv\Scripts\playwright.exe install chromium` manually in CMD.
