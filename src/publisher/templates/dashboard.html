@@ -379,20 +379,32 @@
 <!-- TAB F: POST EDITOR -->
 <div id="tab-editor" class="tab-panel">
     <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">LinkedIn Post Draft Editor</h2>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <h2 class="card-title">LinkedIn Post Draft Editor</h2>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                    Compose, validate, review live LinkedIn feed appearance, and attach ordered media.
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <div class="editor-view-switcher">
+                    <button type="button" id="tab-btn-split" class="editor-view-tab active" onclick="switchEditorView('split')">🔀 Split View</button>
+                    <button type="button" id="tab-btn-editor" class="editor-view-tab" onclick="switchEditorView('editor')">✍️ Compose</button>
+                    <button type="button" id="tab-btn-preview" class="editor-view-tab" onclick="switchEditorView('preview')">👁️ Live Feed Preview</button>
+                </div>
                 <span id="draft-approval-badge" class="badge badge-warning">Draft: GENERATED</span>
             </div>
         </div>
 
-        <div class="editor-layout">
-            <!-- Left: Editable Draft -->
-            <div>
+        <div id="editor-layout-container" class="editor-layout">
+            <!-- Left: Editable Draft & Media Sequence -->
+            <div id="editor-left-pane">
                 <div class="form-group">
-                    <label class="form-label" for="post-body">Post Content (LinkedIn Format)</label>
-                    <textarea id="post-body" class="form-textarea" style="min-height: 320px; font-size: 0.95rem; line-height: 1.6;" placeholder="Generated LinkedIn post draft will appear here..."></textarea>
-                    <div id="char-count" class="char-counter">0 / 3000 characters</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                        <label class="form-label" for="post-body" style="margin: 0;">Post Commentary (LinkedIn Format)</label>
+                        <div id="char-count" class="char-counter" style="margin: 0;">0 / 3000 characters</div>
+                    </div>
+                    <textarea id="post-body" class="form-textarea" style="min-height: 280px; font-size: 0.95rem; line-height: 1.6;" placeholder="Generated LinkedIn post draft will appear here..." oninput="handlePostBodyInput()"></textarea>
                 </div>
 
                 <div class="form-grid-2col">
@@ -409,11 +421,37 @@
                     </div>
                 </div>
 
+                <!-- Attached Media Sequence Manager -->
+                <div style="margin-top: 1rem; margin-bottom: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <h3 style="font-size: 0.95rem; color: var(--accent-cyan); margin: 0; font-weight: 600;">Selected Media for Upload</h3>
+                            <span id="attached-media-count-badge" class="badge badge-neutral" style="font-size: 0.72rem;">0 Media</span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openMediaSelectorModal()" title="Pick and order from repo assets, screenshots, or videos">
+                                🖼️ Choose / Order Media
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="triggerExternalMediaUpload()" title="Upload a photo or video from disk">
+                                📁 Upload File
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Hidden file input for external photo/video upload -->
+                    <input type="file" id="media-file-input" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime" style="display: none;" onchange="handleExternalMediaSelected(this)">
+
+                    <!-- Attached Media Container -->
+                    <div id="editor-media-preview" class="media-container-box">
+                        <!-- Populated dynamically by renderDraftMediaPreview() -->
+                    </div>
+                </div>
+
                 <!-- Validation Warnings Panel -->
                 <div id="editor-validation-warnings" style="margin-top: 1rem; display: none;"></div>
 
                 <!-- Action Controls -->
-                <div class="editor-actions-row">
+                <div class="editor-actions-row" style="margin-top: 1.25rem;">
                     <button type="button" class="btn btn-secondary" onclick="saveDraftEdits()">💾 Save Draft</button>
                     <button type="button" class="btn btn-secondary" onclick="regenerateDraft()">🔄 Regenerate</button>
                     <button type="button" class="btn btn-secondary" onclick="validateCurrentDraft()">🛡️ Validate Draft</button>
@@ -422,45 +460,91 @@
                 </div>
             </div>
 
-            <!-- Right: Evidence & Media Preview -->
-            <div>
-                <h3 style="font-size: 0.95rem; color: var(--accent-primary); margin-bottom: 0.75rem; font-weight: 600;">Supporting Evidence</h3>
-                <div id="editor-evidence-list" class="evidence-panel">
-                    <div style="color: var(--text-muted); text-align: center; padding: 2rem;">
-                        No evidence linked to current draft.
+            <!-- Right: LinkedIn Live Feed Preview & Supporting Evidence -->
+            <div id="editor-right-pane">
+                <!-- LinkedIn Live Feed Preview Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <span style="font-size: 1rem;">📱</span>
+                        <h3 style="font-size: 0.95rem; color: #70b5f9; margin: 0; font-weight: 700; letter-spacing: 0.3px;">Live LinkedIn Feed Preview</h3>
                     </div>
+                    <span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 10px;">
+                        Interactive Realtime
+                    </span>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-                    <h3 style="font-size: 0.95rem; color: var(--accent-cyan); margin: 0; font-weight: 600;">Attached Media</h3>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="openMediaSelectorModal()" title="Pick from repo assets or demo screenshots">
-                            🖼️ Repo / System
-                        </button>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="triggerExternalMediaUpload()" title="Upload a photo or video from disk">
-                            📁 Upload Media
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Hidden file input for external photo/video upload -->
-                <input type="file" id="media-file-input" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime" style="display: none;" onchange="handleExternalMediaSelected(this)">
-
-                <!-- Attached Media Container -->
-                <div id="editor-media-preview" class="media-container-box">
-                    <div class="empty-media-state">
-                        <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">📷</div>
-                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 0.92rem;">No Media Attached</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                            Attach a screenshot, repo image, or demo video to preview before posting.
+                <!-- The Live LinkedIn Post Card -->
+                <div id="linkedin-live-card" class="linkedin-feed-card">
+                    <!-- Author Bar -->
+                    <div class="li-header">
+                        <div class="li-author-cluster">
+                            <div id="li-preview-avatar" class="li-avatar">
+                                <span>GY</span>
+                            </div>
+                            <div class="li-author-details">
+                                <div class="li-name-row">
+                                    <span id="li-preview-name">GOSAI YASH</span>
+                                    <span class="li-degree-badge">• 1st</span>
+                                </div>
+                                <div id="li-preview-headline" class="li-headline">
+                                    M.Sc.IT (AI/ML) Student at LJ University | Data Science & AI Developer
+                                </div>
+                                <div class="li-timestamp-row">
+                                    <span>Just now</span>
+                                    <span>•</span>
+                                    <span title="Public">🌐</span>
+                                </div>
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-primary btn-sm" onclick="triggerExternalMediaUpload()">
-                                📁 Upload Photo / Video
-                            </button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="openMediaSelectorModal()">
-                                🖼️ Choose from System / Repo
-                            </button>
+                        <div style="color: #94a3b8; font-size: 1.1rem; cursor: pointer; padding: 0 4px;" title="Post options">•••</div>
+                    </div>
+
+                    <!-- Post Body (Live rendered) -->
+                    <div id="li-preview-body" class="li-body">
+                        Start typing or select a draft to see your LinkedIn post come to life in real-time...
+                    </div>
+
+                    <!-- Media Section (Live rendered single photo, multi-image grid/carousel, or video) -->
+                    <div id="li-preview-media-container" class="li-media-wrapper">
+                        <!-- Populated by updateLivePostPreview() -->
+                    </div>
+
+                    <!-- Social Reaction Bar -->
+                    <div class="li-social-stats">
+                        <div class="li-reaction-icons">
+                            <span style="font-size: 0.85rem;">👍👏💡</span>
+                            <span id="li-preview-reactions" style="margin-left: 3px; font-weight: 500;">Yash Gosai and 24 others</span>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <span>6 comments</span>
+                            <span>•</span>
+                            <span>2 reposts</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Bar -->
+                    <div class="li-action-bar">
+                        <button type="button" class="li-action-btn">
+                            <span>👍</span> <span>Like</span>
+                        </button>
+                        <button type="button" class="li-action-btn">
+                            <span>💬</span> <span>Comment</span>
+                        </button>
+                        <button type="button" class="li-action-btn">
+                            <span>🔁</span> <span>Repost</span>
+                        </button>
+                        <button type="button" class="li-action-btn">
+                            <span>📤</span> <span>Send</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Supporting Evidence Accordion -->
+                <div style="margin-top: 1.5rem;">
+                    <h3 style="font-size: 0.92rem; color: var(--accent-primary); margin-bottom: 0.65rem; font-weight: 600;">Linked Supporting Evidence</h3>
+                    <div id="editor-evidence-list" class="evidence-panel" style="max-height: 280px;">
+                        <div style="color: var(--text-muted); text-align: center; padding: 1.5rem;">
+                            No evidence linked to current draft.
                         </div>
                     </div>
                 </div>
@@ -621,28 +705,56 @@
     </div>
 </div>
 
-<!-- Modal: Choose from System / Repo Media -->
+<!-- Modal: Choose from System / Repo Media (Multi-Select & Order) -->
 <div id="media-selector-modal" class="custom-modal-backdrop" style="display: none;" onclick="handleModalBackdropClick(event)">
-    <div class="custom-modal-dialog">
+    <div class="custom-modal-dialog" style="max-width: 920px; width: 95vw;">
         <div class="custom-modal-header">
             <div>
-                <h3 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-weight: 700;">Select Project or System Media</h3>
+                <h3 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-weight: 700;">Select & Order Project Media</h3>
                 <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
-                    Choose an image or video discovered from the repository, demo screenshots, or uploaded media.
+                    Click items in the sequence you want them uploaded (e.g. 1st, 2nd, 3rd). Reorder anytime using the sequence bar below.
                 </div>
             </div>
             <button type="button" class="btn-close" onclick="closeMediaSelectorModal()">✕</button>
         </div>
         <div class="custom-modal-body">
+            <!-- Selected Sequence Order Bar -->
+            <div id="modal-selection-tray" class="media-sequence-tray" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-cyan); display: flex; align-items: center; gap: 0.35rem;">
+                        <span>📋 Upload Sequence:</span>
+                        <span id="modal-selected-count" style="color: #fff; font-weight: 600;">0 items selected</span>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 2px 8px;" onclick="clearModalMediaSelection()">
+                        Clear All
+                    </button>
+                </div>
+                <div id="modal-sequence-chips" class="media-sequence-list">
+                    <!-- Sequence chips populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Filter Tabs & Search -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div class="media-filter-row" style="margin: 0;">
+                    <button type="button" class="media-filter-btn active" onclick="filterModalMedia('all', this)">All Media (<span id="filter-count-all">0</span>)</button>
+                    <button type="button" class="media-filter-btn" onclick="filterModalMedia('image', this)">Photos & GIFs (<span id="filter-count-image">0</span>)</button>
+                    <button type="button" class="media-filter-btn" onclick="filterModalMedia('video', this)">Videos (<span id="filter-count-video">0</span>)</button>
+                    <button type="button" class="media-filter-btn" onclick="filterModalMedia('repo', this)">Repo Assets</button>
+                    <button type="button" class="media-filter-btn" onclick="filterModalMedia('demo', this)">Demo Screenshots</button>
+                </div>
+                <input type="text" id="modal-media-search" class="form-control" placeholder="Search by name..." style="max-width: 200px; padding: 0.3rem 0.65rem; font-size: 0.8rem;" oninput="handleModalMediaSearch(this.value)">
+            </div>
+
             <div id="media-modal-loading" style="display: none; text-align: center; padding: 2rem;">
                 <div class="spinner-ring" style="width: 36px; height: 36px; margin: 0 auto 0.75rem auto;"></div>
-                <div style="color: var(--text-muted); font-size: 0.9rem;">Scanning project screenshots and repository assets...</div>
+                <div style="color: var(--text-muted); font-size: 0.9rem;">Scanning project screenshots, videos, and repository assets...</div>
             </div>
             <div id="media-modal-empty" style="display: none; text-align: center; padding: 2.5rem 1rem;">
                 <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🖼️</div>
-                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">No Pre-existing Media Found</div>
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">No Media Found</div>
                 <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-                    No repository images or demo screenshots were found for this project yet.
+                    No repository images or demo screenshots were found matching this filter.
                 </div>
                 <button type="button" class="btn btn-primary btn-sm" onclick="closeMediaSelectorModal(); triggerExternalMediaUpload();">
                     📁 Upload from Computer Instead
@@ -650,9 +762,17 @@
             </div>
             <div id="media-grid" class="media-gallery-grid"></div>
         </div>
-        <div class="custom-modal-footer">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="closeMediaSelectorModal()">Close</button>
-            <button type="button" class="btn btn-primary btn-sm" onclick="closeMediaSelectorModal(); triggerExternalMediaUpload();">📁 Upload New File</button>
+        <div class="custom-modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">
+                <span id="modal-footer-hint">Click cards to add or remove them from the upload sequence.</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeMediaSelectorModal()">Cancel</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeMediaSelectorModal(); triggerExternalMediaUpload();">📁 Upload New</button>
+                <button type="button" id="btn-apply-modal-media" class="btn btn-primary btn-sm" onclick="applyModalMediaSelection()">
+                    ✅ Apply Selection (0)
+                </button>
+            </div>
         </div>
     </div>
 </div>

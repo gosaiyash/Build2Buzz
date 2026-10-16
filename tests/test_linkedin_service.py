@@ -421,4 +421,66 @@ async def test_publishing_with_media_upload_failure():
         assert "Could not upload attached media to LinkedIn" in err_msg
 
 
+@pytest.mark.asyncio
+async def test_publishing_with_multi_image_sequence_order_preserved():
+    """Verify multiple images generate LinkedIn content.multiImage in the exact user-specified sequence."""
+    project = Project(name="Build2Buzz", repo_url="https://github.com/example/repo")
+    ordered_paths = [
+        "docs/media/item1.png",
+        "docs/media/item4.png",
+        "docs/media/item2.png",
+    ]
+    draft = Draft(
+        id=8,
+        project_id=1,
+        body="Draft with 3 images in specific sequence [1, 4, 2].",
+        status=DraftStatus.APPROVED,
+        screenshot_path=ordered_paths[0],
+        post_metadata={"media_paths": ordered_paths},
+    )
+
+    posted_payload = {}
+
+    def mock_post_side_effect(url, headers, json):
+        nonlocal posted_payload
+        posted_payload = json
+        return httpx.Response(
+            status_code=201,
+            headers={"x-restli-id": "urn:li:share:multi_img_success"},
+        )
+
+    urn_map = {
+        "docs/media/item1.png": "urn:li:image:urn_1",
+        "docs/media/item4.png": "urn:li:image:urn_4",
+        "docs/media/item2.png": "urn:li:image:urn_2",
+    }
+
+    async def mock_upload(media_path, access_token, author_urn):
+        return urn_map[media_path], "image"
+
+    with patch("src.publisher.services.media_service.MediaService.resolve_media_file", new_callable=AsyncMock, side_effect=lambda p: (p, False, "image/png")), \
+         patch("src.publisher.services.media_service.MediaService.upload_image_to_linkedin", new_callable=AsyncMock, side_effect=lambda file_path, access_token, author_urn: urn_map[file_path]), \
+         patch("httpx.AsyncClient.post", side_effect=mock_post_side_effect):
+
+        success, post_urn, err_cat = await LinkedInPublishingService.publish_draft(
+            draft=draft,
+            project=project,
+            access_token="valid-token",
+            author_urn="urn:li:person:123",
+            submission_id="sub-multi-img",
+        )
+
+        assert success is True
+        assert post_urn == "urn:li:share:multi_img_success"
+        assert err_cat is None
+        assert "multiImage" in posted_payload["content"]
+        images = posted_payload["content"]["multiImage"]["images"]
+        assert len(images) == 3
+        # Verify exact sequence [1, 4, 2] is preserved
+        assert images[0]["id"] == "urn:li:image:urn_1"
+        assert images[1]["id"] == "urn:li:image:urn_4"
+        assert images[2]["id"] == "urn:li:image:urn_2"
+
+
+
 

@@ -180,12 +180,26 @@ class DraftRepository:
         self.db.refresh(draft)
         return draft
 
-    def update_media(self, draft_id: int, screenshot_path: str | None) -> Draft:
+    def update_media(
+        self,
+        draft_id: int,
+        screenshot_path: str | None,
+        media_paths: list[str] | None = None,
+    ) -> Draft:
         draft = self.get(draft_id)
         if not draft:
             raise ValueError(f"Draft with ID {draft_id} not found.")
 
         draft.screenshot_path = screenshot_path
+        meta = dict(draft.post_metadata or {})
+        if media_paths is not None:
+            meta["media_paths"] = media_paths
+        elif screenshot_path is None:
+            meta.pop("media_paths", None)
+        else:
+            meta["media_paths"] = [screenshot_path]
+        draft.post_metadata = meta
+
         if draft.status == DraftStatus.APPROVED:
             draft.status = DraftStatus.NEEDS_REVIEW
 

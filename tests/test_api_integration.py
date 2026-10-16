@@ -355,3 +355,91 @@ def test_draft_media_management_flow(api_client: TestClient, tmp_path):
     draft_get2 = api_client.get(f"/api/drafts/{draft_id}")
     assert draft_get2.json()["screenshot_path"] is None
 
+
+def test_multi_media_selection_and_ordering_api_workflow(api_client: TestClient):
+    """Verify selecting multiple media items with custom ordering [1, 4, 2] is preserved through the API."""
+    # 1. Create project and draft with mocked GitHub repo
+    mock_repo = GitHubRepoInfo(
+        owner="testuser",
+        repo="multi-media-proj",
+        full_name="testuser/multi-media-proj",
+        description="Multi-media test repository",
+        html_url="https://github.com/testuser/multi-media-proj",
+        language="Python",
+        topics=["ai"],
+        has_readme=True,
+        readme_content="# Multi Media Test",
+    )
+
+    with patch("src.publisher.services.github_service.GitHubClient.fetch_repository", new_callable=AsyncMock, return_value=mock_repo):
+        proj_res = api_client.post(
+            "/api/projects/analyze",
+            json={"repo_url": "https://github.com/testuser/multi-media-proj"},
+        )
+        assert proj_res.status_code == 200
+        project_id = proj_res.json()["project_id"]
+
+    from src.publisher.services.ai.base import GeneratedDraftOutput
+    mock_ai = GeneratedDraftOutput(
+        post_text="Multi-media draft showcase post",
+        hashtags=["#Python"],
+        project_links=[],
+        evidence_references=[],
+    )
+    with patch("src.publisher.services.ai.cloud_provider.CloudAPIProvider.generate_linkedin_draft", new_callable=AsyncMock, return_value=mock_ai):
+        draft_res = api_client.post(
+            f"/api/projects/{project_id}/drafts",
+            json={"style": "developer"},
+        )
+        assert draft_res.status_code == 200
+        draft_id = draft_res.json()["draft_id"]
+
+    # 2. Attach multiple media paths in specific user sequence: [img1, img4, img2]
+    custom_order = [
+        "https://example.com/asset1.png",
+        "https://example.com/asset4.png",
+        "https://example.com/asset2.png",
+    ]
+    put_res = api_client.put(
+        f"/api/drafts/{draft_id}/media",
+        json={"media_path": custom_order[0], "media_paths": custom_order},
+    )
+    assert put_res.status_code == 200
+    put_data = put_res.json()
+    assert put_data["screenshot_path"] == "https://example.com/asset1.png"
+    assert put_data["media_paths"] == custom_order
+
+    # 3. Retrieve draft via GET and assert exact sequence order is preserved
+    get_res = api_client.get(f"/api/drafts/{draft_id}")
+    assert get_res.status_code == 200
+    get_data = get_res.json()
+    assert get_data["media_paths"] == [
+        "https://example.com/asset1.png",
+        "https://example.com/asset4.png",
+        "https://example.com/asset2.png",
+    ]
+
+    # 4. Reorder items to [asset4, asset2, asset1]
+    reordered = [
+        "https://example.com/asset4.png",
+        "https://example.com/asset2.png",
+        "https://example.com/asset1.png",
+    ]
+    reorder_res = api_client.put(
+        f"/api/drafts/{draft_id}/media",
+        json={"media_path": reordered[0], "media_paths": reordered},
+    )
+    assert reorder_res.status_code == 200
+    assert reorder_res.json()["media_paths"] == reordered
+    assert reorder_res.json()["screenshot_path"] == "https://example.com/asset4.png"
+
+    # 5. Delete and verify both screenshot_path and media_paths are cleared
+    del_res = api_client.delete(f"/api/drafts/{draft_id}/media")
+    assert del_res.status_code == 200
+
+    get_res2 = api_client.get(f"/api/drafts/{draft_id}")
+    assert get_res2.status_code == 200
+    assert get_res2.json()["screenshot_path"] is None
+    assert get_res2.json()["media_paths"] == []
+
+

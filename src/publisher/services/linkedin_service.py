@@ -304,27 +304,62 @@ class LinkedInPublishingService:
             "isReshareDisabledByAuthor": False,
         }
 
-        # Media Upload (Image, GIF, or Video)
-        if draft.screenshot_path:
+        # Media Upload (Image, GIF, Video, or Multi-Image)
+        meta = draft.post_metadata or {}
+        media_paths: list[str] = meta.get("media_paths") or ([draft.screenshot_path] if draft.screenshot_path else [])
+        if media_paths:
             try:
                 from src.publisher.services.media_service import MediaService
-                media_urn, media_type = await MediaService.upload_media_to_linkedin(
-                    file_path_or_url=draft.screenshot_path,
-                    access_token=access_token,
-                    author_urn=author_urn,
-                )
-                payload["content"] = {
-                    "media": {
-                        "id": media_urn,
-                        "title": project.name,
+
+                resolved_items = []
+                for m_path in media_paths:
+                    p, is_vid, mime = await MediaService.resolve_media_file(m_path)
+                    resolved_items.append((m_path, p, is_vid, mime))
+
+                # If 1 item or any item is a video:
+                if len(resolved_items) == 1 or any(item[2] for item in resolved_items):
+                    target_item = next((item for item in resolved_items if item[2]), resolved_items[0])
+                    media_urn, media_type = await MediaService.upload_media_to_linkedin(
+                        file_path_or_url=target_item[0],
+                        access_token=access_token,
+                        author_urn=author_urn,
+                    )
+                    payload["content"] = {
+                        "media": {
+                            "id": media_urn,
+                            "title": project.name,
+                        }
                     }
-                }
-                logger.info(
-                    "Attached %s media (%s) to LinkedIn post payload for Draft #%d",
-                    media_type,
-                    media_urn,
-                    draft.id,
-                )
+                    logger.info(
+                        "Attached single %s (%s) to LinkedIn post payload for Draft #%d",
+                        media_type,
+                        media_urn,
+                        draft.id,
+                    )
+                else:
+                    # Multi-image: 2 to 20 images uploaded in exact specified sequence
+                    uploaded_images = []
+                    for target_path, _, _, _ in resolved_items[:20]:
+                        img_urn = await MediaService.upload_image_to_linkedin(
+                            file_path=target_path,
+                            access_token=access_token,
+                            author_urn=author_urn,
+                        )
+                        uploaded_images.append({
+                            "id": img_urn,
+                            "altText": project.name,
+                        })
+
+                    payload["content"] = {
+                        "multiImage": {
+                            "images": uploaded_images,
+                        }
+                    }
+                    logger.info(
+                        "Attached multiImage (%d images in sequence) to LinkedIn post payload for Draft #%d",
+                        len(uploaded_images),
+                        draft.id,
+                    )
             except Exception as media_err:
                 logger.error("Could not upload attached media to LinkedIn: %s", media_err)
                 return (

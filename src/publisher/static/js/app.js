@@ -5,6 +5,12 @@
 let currentProjectId = null;
 let currentDraftId = null;
 let currentDraftScreenshot = null;
+let currentDraftMediaPaths = []; // Ordered array of media paths for upload
+let modalAvailableMedia = [];    // All scanned media items {url, title, is_video, source}
+let modalSelectedMedia = [];     // Array of items in chosen upload sequence order
+let modalActiveFilter = "all";   // Active media filter in modal ('all', 'image', 'video', 'repo', 'demo')
+let modalSearchQuery = "";
+let currentPreviewSlide = 0;     // Slide index for multi-image preview carousel
 
 document.addEventListener("DOMContentLoaded", () => {
     initNavigation();
@@ -95,7 +101,7 @@ function switchToTab(tabId) {
     if (navItem) navItem.click();
 }
 
-// Character Counter
+// Character Counter & Live LinkedIn Post Sync
 function initCharCounter() {
     const postBody = document.getElementById("post-body");
     const charCount = document.getElementById("char-count");
@@ -108,6 +114,7 @@ function initCharCounter() {
             } else {
                 charCount.style.color = "var(--text-dim)";
             }
+            updateLivePostPreview();
         });
     }
 }
@@ -521,28 +528,246 @@ function populateDraftEditor(draftData) {
         ).join("");
     }
 
-    // Render media preview in Post Editor
-    renderDraftMediaPreview(draftData.screenshot_path);
+    // Update media sequence state
+    currentDraftScreenshot = draftData.screenshot_path || (draftData.media_paths && draftData.media_paths.length ? draftData.media_paths[0] : null);
+    if (draftData.media_paths && draftData.media_paths.length > 0) {
+        currentDraftMediaPaths = [...draftData.media_paths];
+    } else if (currentDraftScreenshot) {
+        currentDraftMediaPaths = [currentDraftScreenshot];
+    } else {
+        currentDraftMediaPaths = [];
+    }
+
+    // Render media in Post Editor & Live LinkedIn Feed Preview
+    renderDraftMediaPreview(currentDraftScreenshot, currentDraftMediaPaths);
+    updateLivePostPreview();
 }
 
-function renderDraftMediaPreview(screenshotPath) {
+// Editor View Modes Switcher: 'split' | 'editor' | 'preview'
+function switchEditorView(viewMode) {
+    const leftPane = document.getElementById("editor-left-pane");
+    const rightPane = document.getElementById("editor-right-pane");
+    const grid = document.querySelector(".editor-split-grid");
+    const buttons = document.querySelectorAll(".editor-view-switcher .view-switch-btn");
+
+    buttons.forEach(btn => {
+        const onclickAttr = btn.getAttribute("onclick") || "";
+        if (onclickAttr.includes(`'${viewMode}'`)) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
+
+    if (viewMode === "split") {
+        if (leftPane) leftPane.style.display = "block";
+        if (rightPane) rightPane.style.display = "block";
+        if (grid) grid.style.gridTemplateColumns = "";
+    } else if (viewMode === "editor") {
+        if (leftPane) leftPane.style.display = "block";
+        if (rightPane) rightPane.style.display = "none";
+        if (grid) grid.style.gridTemplateColumns = "1fr";
+    } else if (viewMode === "preview") {
+        if (leftPane) leftPane.style.display = "none";
+        if (rightPane) rightPane.style.display = "block";
+        if (grid) grid.style.gridTemplateColumns = "1fr";
+    }
+}
+
+// Live LinkedIn Post Feed Preview
+function updateLivePostPreview() {
+    const bodyEl = document.getElementById("li-preview-body");
+    const mediaContainer = document.getElementById("li-preview-media-container");
+    const postBodyInput = document.getElementById("post-body");
+
+    // 1. Format and display post body text
+    if (bodyEl && postBodyInput) {
+        const rawText = postBodyInput.value.trim();
+        if (!rawText) {
+            bodyEl.innerHTML = `<span style="color: #64748b; font-style: italic;">Start typing your post or load a draft to see your live LinkedIn feed preview here...</span>`;
+        } else {
+            let formatted = escapeHtml(postBodyInput.value);
+            // Replace URLs with clickable styled links
+            formatted = formatted.replace(
+                /(https?:\/\/[^\s<]+)/g,
+                '<a class="li-link" href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+            );
+            // Replace #hashtags with styled hashtag spans
+            formatted = formatted.replace(
+                /(^|\s)(#[a-zA-Z0-9_\u00c0-\u017e]+)/g,
+                '$1<span class="li-hashtag">$2</span>'
+            );
+            // Convert newlines to HTML breaks
+            formatted = formatted.replace(/\n/g, "<br>");
+            bodyEl.innerHTML = formatted;
+        }
+    }
+
+    // 2. Render Media Section (photos, grid, or video)
+    if (mediaContainer) {
+        const mediaList = (currentDraftMediaPaths && currentDraftMediaPaths.length > 0)
+            ? currentDraftMediaPaths
+            : (currentDraftScreenshot ? [currentDraftScreenshot] : []);
+
+        if (mediaList.length === 0) {
+            mediaContainer.innerHTML = `
+                <div style="background: rgba(0,0,0,0.25); border: 1px dashed rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 1.25rem 1rem; text-align: center; margin: 0.5rem 1rem 0.75rem 1rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📷</div>
+                    <div style="font-size: 0.82rem; color: #94a3b8; font-weight: 500;">No media attached to this post</div>
+                    <div style="font-size: 0.74rem; color: #64748b; margin-top: 0.25rem;">Posts with images/videos receive up to 2x higher engagement on LinkedIn feed.</div>
+                </div>
+            `;
+            return;
+        }
+
+        function formatMediaUrl(url) {
+            if (!url) return "";
+            if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) {
+                return url;
+            }
+            return "/" + url;
+        }
+
+        function isVideoUrl(url) {
+            const clean = url.split("?")[0].toLowerCase();
+            return clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".mov") || clean.endsWith(".mkv");
+        }
+
+        // Single media (video or single photo)
+        if (mediaList.length === 1) {
+            const itemUrl = formatMediaUrl(mediaList[0]);
+            const isVid = isVideoUrl(mediaList[0]);
+            if (isVid) {
+                mediaContainer.innerHTML = `
+                    <div style="background: #000; position: relative;">
+                        <video src="${escapeHtml(itemUrl)}" controls class="li-media-single-vid" preload="metadata" style="width: 100%; max-height: 380px; display: block; object-fit: contain;"></video>
+                        <div style="position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.75); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; color: #fff; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                            <span>🎬</span> VIDEO POST
+                        </div>
+                    </div>
+                `;
+            } else {
+                mediaContainer.innerHTML = `
+                    <div style="background: #000; overflow: hidden; position: relative;">
+                        <img src="${escapeHtml(itemUrl)}" alt="Post preview image" class="li-media-single-img" style="width: 100%; max-height: 420px; object-fit: contain; display: block; cursor: pointer;" onclick="window.open('${escapeHtml(itemUrl)}', '_blank')">
+                    </div>
+                `;
+            }
+            return;
+        }
+
+        // 2 items: Side-by-side split grid
+        if (mediaList.length === 2) {
+            const u1 = formatMediaUrl(mediaList[0]);
+            const u2 = formatMediaUrl(mediaList[1]);
+            mediaContainer.innerHTML = `
+                <div class="li-grid-2">
+                    <img src="${escapeHtml(u1)}" alt="Image 1" onclick="window.open('${escapeHtml(u1)}', '_blank')">
+                    <img src="${escapeHtml(u2)}" alt="Image 2" onclick="window.open('${escapeHtml(u2)}', '_blank')">
+                </div>
+                <div class="li-carousel-bar">
+                    <span>🖼️ Multi-Image Post (2 photos in upload sequence [1, 2])</span>
+                    <span>Order preserved</span>
+                </div>
+            `;
+            return;
+        }
+
+        // 3 items: 1 large left, 2 stacked right
+        if (mediaList.length === 3) {
+            const u1 = formatMediaUrl(mediaList[0]);
+            const u2 = formatMediaUrl(mediaList[1]);
+            const u3 = formatMediaUrl(mediaList[2]);
+            mediaContainer.innerHTML = `
+                <div class="li-grid-3">
+                    <img src="${escapeHtml(u1)}" alt="Image 1" class="li-grid-large" onclick="window.open('${escapeHtml(u1)}', '_blank')">
+                    <div class="li-grid-stack">
+                        <img src="${escapeHtml(u2)}" alt="Image 2" onclick="window.open('${escapeHtml(u2)}', '_blank')">
+                        <img src="${escapeHtml(u3)}" alt="Image 3" onclick="window.open('${escapeHtml(u3)}', '_blank')">
+                    </div>
+                </div>
+                <div class="li-carousel-bar">
+                    <span>🖼️ Multi-Image Post (3 photos in upload sequence [1, 2, 3])</span>
+                    <span>Order preserved</span>
+                </div>
+            `;
+            return;
+        }
+
+        // 4+ items: 2x2 grid with overflow +N badge on 4th item, plus interactive carousel slider
+        const u1 = formatMediaUrl(mediaList[0]);
+        const u2 = formatMediaUrl(mediaList[1]);
+        const u3 = formatMediaUrl(mediaList[2]);
+        const u4 = formatMediaUrl(mediaList[3]);
+        const overflowCount = mediaList.length - 4;
+
+        if (currentPreviewSlide >= mediaList.length) currentPreviewSlide = 0;
+        if (currentPreviewSlide < 0) currentPreviewSlide = mediaList.length - 1;
+
+        mediaContainer.innerHTML = `
+            <div class="li-grid-4">
+                <img src="${escapeHtml(u1)}" alt="Image 1" onclick="setPreviewSlide(0)">
+                <img src="${escapeHtml(u2)}" alt="Image 2" onclick="setPreviewSlide(1)">
+                <img src="${escapeHtml(u3)}" alt="Image 3" onclick="setPreviewSlide(2)">
+                <div class="li-grid-overflow-box" onclick="setPreviewSlide(3)">
+                    <img src="${escapeHtml(u4)}" alt="Image 4">
+                    ${overflowCount > 0 ? `<div class="li-grid-overflow-badge">+${overflowCount}</div>` : ''}
+                </div>
+            </div>
+            <div class="li-carousel-bar">
+                <button type="button" class="btn btn-secondary btn-sm" style="padding: 1px 8px; font-size: 0.75rem;" onclick="prevPreviewSlide()">◀ Prev</button>
+                <span>Viewing photo <strong>#${currentPreviewSlide + 1}</strong> of ${mediaList.length} (Upload order: [${mediaList.map((_, i) => i + 1).join(', ')}])</span>
+                <button type="button" class="btn btn-secondary btn-sm" style="padding: 1px 8px; font-size: 0.75rem;" onclick="nextPreviewSlide()">Next ▶</button>
+            </div>
+        `;
+    }
+}
+
+function setPreviewSlide(index) {
+    if (!currentDraftMediaPaths || currentDraftMediaPaths.length === 0) return;
+    currentPreviewSlide = index;
+    const itemUrl = currentDraftMediaPaths[currentPreviewSlide];
+    if (itemUrl) {
+        const fullUrl = itemUrl.startsWith("/") || itemUrl.startsWith("http") ? itemUrl : "/" + itemUrl;
+        window.open(fullUrl, "_blank");
+    }
+}
+
+function nextPreviewSlide() {
+    if (!currentDraftMediaPaths || currentDraftMediaPaths.length === 0) return;
+    currentPreviewSlide = (currentPreviewSlide + 1) % currentDraftMediaPaths.length;
+    updateLivePostPreview();
+}
+
+function prevPreviewSlide() {
+    if (!currentDraftMediaPaths || currentDraftMediaPaths.length === 0) return;
+    currentPreviewSlide = (currentPreviewSlide - 1 + currentDraftMediaPaths.length) % currentDraftMediaPaths.length;
+    updateLivePostPreview();
+}
+
+// Post Editor Left Pane Media Preview & Ordered Sequence Manager
+function renderDraftMediaPreview(screenshotPath, mediaPaths) {
     const mediaPreview = document.getElementById("editor-media-preview");
     if (!mediaPreview) return;
 
-    if (!screenshotPath) {
+    const list = (mediaPaths && mediaPaths.length > 0)
+        ? mediaPaths
+        : (screenshotPath ? [screenshotPath] : []);
+
+    if (list.length === 0) {
         mediaPreview.innerHTML = `
             <div class="empty-media-state">
                 <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">📷</div>
                 <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem; font-size: 0.92rem;">No Media Attached</div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                    Attach a screenshot, repo image, or demo video to preview before posting.
+                    Attach photos, demo videos, or repository assets. Your selected upload order is preserved for LinkedIn.
                 </div>
                 <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="triggerExternalMediaUpload()">
-                        📁 Upload Photo / Video
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openMediaSelectorModal()">
+                        🖼️ Select & Order Media
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="openMediaSelectorModal()">
-                        🖼️ Choose from System / Repo
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="triggerExternalMediaUpload()">
+                        📁 Upload from Computer
                     </button>
                 </div>
             </div>
@@ -550,51 +775,119 @@ function renderDraftMediaPreview(screenshotPath) {
         return;
     }
 
-    // Determine target media URL
-    let mediaUrl = screenshotPath;
-    if (!mediaUrl.startsWith("http://") && !mediaUrl.startsWith("https://") && !mediaUrl.startsWith("/")) {
-        mediaUrl = "/" + mediaUrl;
+    function formatUrl(p) {
+        if (!p.startsWith("http://") && !p.startsWith("https://") && !p.startsWith("/")) return "/" + p;
+        return p;
     }
 
-    const cleanPath = screenshotPath.split("?")[0].toLowerCase();
-    const isVideo = cleanPath.endsWith(".mp4") || cleanPath.endsWith(".webm") || cleanPath.endsWith(".mov") || cleanPath.endsWith(".mkv");
-    const mediaTypeLabel = isVideo ? "VIDEO" : "PHOTO";
-    const fileName = screenshotPath.split("/").pop() || "media_asset";
-
-    let mediaElement = "";
-    if (isVideo) {
-        mediaElement = `<video src="${escapeHtml(mediaUrl)}" controls class="media-preview-element" preload="metadata"></video>`;
-    } else {
-        mediaElement = `<img src="${escapeHtml(mediaUrl)}" alt="Attached media preview" class="media-preview-element" onclick="window.open('${escapeHtml(mediaUrl)}', '_blank')" title="Click to open full resolution image">`;
+    function isVidPath(p) {
+        const c = p.split("?")[0].toLowerCase();
+        return c.endsWith(".mp4") || c.endsWith(".webm") || c.endsWith(".mov") || c.endsWith(".mkv");
     }
+
+    const itemsHtml = list.map((path, idx) => {
+        const url = formatUrl(path);
+        const isVid = isVidPath(path);
+        const filename = path.split("/").pop() || `item_${idx + 1}`;
+        const isFirst = (idx === 0);
+        const isLast = (idx === list.length - 1);
+
+        const thumb = isVid
+            ? `<div style="width: 48px; height: 48px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">🎬</div>`
+            : `<img src="${escapeHtml(url)}" alt="Thumb" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0;" onerror="this.onerror=null; this.src='/static/icons/image-placeholder.svg'">`;
+
+        return `
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; background: var(--bg-surface-elevated); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                <div style="display: flex; align-items: center; gap: 0.6rem; overflow: hidden;">
+                    <span class="media-order-badge" style="position: static; width: 22px; height: 22px; font-size: 0.7rem; flex-shrink: 0; box-shadow: none;">#${idx + 1}</span>
+                    ${thumb}
+                    <div style="overflow: hidden;">
+                        <div style="font-size: 0.82rem; font-weight: 600; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${escapeHtml(filename)}">
+                            ${escapeHtml(filename)}
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); display: flex; gap: 0.4rem; align-items: center;">
+                            <span class="badge badge-${isVid ? 'warning' : 'info'}" style="font-size: 0.65rem; padding: 1px 4px;">${isVid ? 'VIDEO' : 'IMAGE'}</span>
+                            <a href="${escapeHtml(url)}" target="_blank" style="color: var(--accent-cyan); text-decoration: none;">View ↗</a>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.25rem; flex-shrink: 0;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="moveEditorMedia(${idx}, -1)" ${isFirst ? 'disabled' : ''} title="Move earlier in upload sequence">◀</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="moveEditorMedia(${idx}, 1)" ${isLast ? 'disabled' : ''} title="Move later in upload sequence">▶</button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="removeEditorMediaItem(${idx})" title="Remove this item">✕</button>
+                </div>
+            </div>
+        `;
+    }).join("");
 
     mediaPreview.innerHTML = `
         <div class="media-active-card">
-            ${mediaElement}
-            <div class="media-meta-bar">
-                <div style="display:flex; align-items:center; gap:0.4rem; overflow:hidden;">
-                    <span class="badge badge-${isVideo ? 'warning' : 'info'}" style="font-size:0.72rem;">${mediaTypeLabel}</span>
-                    <span style="font-family:monospace; font-size:0.78rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:180px;" title="${escapeHtml(screenshotPath)}">
-                        ${escapeHtml(fileName)}
-                    </span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+                    <span>📷 Upload Sequence</span>
+                    <span class="badge badge-info" style="font-size: 0.7rem;">${list.length} item${list.length > 1 ? 's' : ''}</span>
                 </div>
-                <a href="${escapeHtml(mediaUrl)}" target="_blank" style="color:var(--accent-cyan); font-size:0.78rem; text-decoration:none; flex-shrink:0;">
-                    🔗 View Full
-                </a>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Exact order: [${list.map((_, i) => i + 1).join(', ')}]</span>
             </div>
-            <div class="media-actions-bar">
-                <button type="button" class="btn btn-secondary btn-sm" style="flex:1;" onclick="openMediaSelectorModal()">
-                    🔄 Change Media
+
+            <div style="display: flex; flex-direction: column; gap: 0.4rem; max-height: 240px; overflow-y: auto;">
+                ${itemsHtml}
+            </div>
+
+            <div class="media-actions-bar" style="border-top: 1px solid var(--border-subtle); padding-top: 0.5rem;">
+                <button type="button" class="btn btn-primary btn-sm" style="flex: 1;" onclick="openMediaSelectorModal()">
+                    🖼️ Manage & Order Media
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" style="flex:1;" onclick="triggerExternalMediaUpload()">
-                    📁 Replace File
+                <button type="button" class="btn btn-secondary btn-sm" onclick="triggerExternalMediaUpload()" title="Upload additional file from computer">
+                    📁 Upload More
                 </button>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeAttachedMedia()" title="Detach media from post">
-                    🗑️ Remove
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeAttachedMedia()" title="Remove all media from this post">
+                    🗑️ Remove All
                 </button>
             </div>
         </div>
     `;
+}
+
+// Reordering and removing media directly in editor
+async function moveEditorMedia(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= currentDraftMediaPaths.length) return;
+    const item = currentDraftMediaPaths.splice(index, 1)[0];
+    currentDraftMediaPaths.splice(newIndex, 0, item);
+    currentDraftScreenshot = currentDraftMediaPaths[0] || null;
+
+    await persistCurrentMediaOrder();
+}
+
+async function removeEditorMediaItem(index) {
+    currentDraftMediaPaths.splice(index, 1);
+    currentDraftScreenshot = currentDraftMediaPaths[0] || null;
+
+    await persistCurrentMediaOrder();
+}
+
+async function persistCurrentMediaOrder() {
+    if (!currentDraftId) return;
+    try {
+        const res = await fetch(`/api/drafts/${currentDraftId}/media`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                media_path: currentDraftScreenshot,
+                media_paths: currentDraftMediaPaths,
+            }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+            currentDraftScreenshot = data.media_path;
+            currentDraftMediaPaths = (data.media_paths && data.media_paths.length) ? data.media_paths : currentDraftMediaPaths;
+            renderDraftMediaPreview(currentDraftScreenshot, currentDraftMediaPaths);
+            updateLivePostPreview();
+        }
+    } catch (err) {
+        showNotification("Failed to update media order: " + err.message, "danger");
+    }
 }
 
 function triggerExternalMediaUpload() {
@@ -624,7 +917,22 @@ async function handleExternalMediaSelected(input) {
         const data = await res.json();
         if (res.ok) {
             currentDraftScreenshot = data.media_path;
-            renderDraftMediaPreview(currentDraftScreenshot);
+            if (!currentDraftMediaPaths) currentDraftMediaPaths = [];
+            currentDraftMediaPaths.push(data.media_path);
+
+            // Persist the updated sequence list
+            await fetch(`/api/drafts/${currentDraftId}/media`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    media_path: currentDraftScreenshot,
+                    media_paths: currentDraftMediaPaths,
+                }),
+            });
+
+            renderDraftMediaPreview(currentDraftScreenshot, currentDraftMediaPaths);
+            updateLivePostPreview();
+
             const badge = document.getElementById("draft-approval-badge");
             const btnPublish = document.getElementById("btn-publish-draft");
             if (badge) {
@@ -632,7 +940,7 @@ async function handleExternalMediaSelected(input) {
                 badge.className = `badge badge-${getBadgeClass(data.draft_state)}`;
             }
             if (btnPublish) btnPublish.disabled = true;
-            showNotification(`✅ Media uploaded and attached (${data.file_size_mb} MB).`, "success");
+            showNotification(`✅ Media uploaded and appended to upload sequence (${data.file_size_mb} MB).`, "success");
         } else {
             showNotification(data.detail || "Upload failed.", "danger");
         }
@@ -645,7 +953,7 @@ async function handleExternalMediaSelected(input) {
 
 async function removeAttachedMedia() {
     if (!currentDraftId) return;
-    if (!confirm("Are you sure you want to remove the attached media from this LinkedIn post draft?")) {
+    if (!confirm("Are you sure you want to remove all attached media from this LinkedIn post draft?")) {
         return;
     }
 
@@ -656,8 +964,10 @@ async function removeAttachedMedia() {
         const data = await res.json();
         if (res.ok) {
             currentDraftScreenshot = null;
-            renderDraftMediaPreview(null);
-            showNotification("Attached media detached from draft.", "info");
+            currentDraftMediaPaths = [];
+            renderDraftMediaPreview(null, []);
+            updateLivePostPreview();
+            showNotification("All attached media detached from draft.", "info");
         } else {
             showNotification(data.detail || "Failed to remove media.", "danger");
         }
@@ -666,6 +976,7 @@ async function removeAttachedMedia() {
     }
 }
 
+// Media Selector Modal: Multi-Select & Custom Ordering Engine
 async function openMediaSelectorModal() {
     if (!currentProjectId) {
         showNotification("No active project selected.", "warning");
@@ -691,69 +1002,252 @@ async function openMediaSelectorModal() {
         }
 
         const items = await res.json();
+        modalAvailableMedia = items || [];
         if (loading) loading.style.display = "none";
 
-        if (!items || items.length === 0) {
-            if (empty) empty.style.display = "block";
-            return;
-        }
-
-        if (grid) {
-            grid.innerHTML = items.map(item => {
-                let mediaUrl = item.url;
-                if (!mediaUrl.startsWith("http://") && !mediaUrl.startsWith("https://") && !mediaUrl.startsWith("/")) {
-                    mediaUrl = "/" + mediaUrl;
+        // Prepopulate modalSelectedMedia based on currentDraftMediaPaths
+        modalSelectedMedia = [];
+        if (currentDraftMediaPaths && currentDraftMediaPaths.length > 0) {
+            for (const path of currentDraftMediaPaths) {
+                const found = modalAvailableMedia.find(m => m.url === path);
+                if (found) {
+                    modalSelectedMedia.push(found);
+                } else {
+                    const clean = path.split("?")[0].toLowerCase();
+                    const isVid = clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".mov") || clean.endsWith(".mkv");
+                    modalSelectedMedia.push({
+                        url: path,
+                        title: path.split("/").pop() || "Selected Media",
+                        is_video: isVid,
+                        source: "Current Post",
+                    });
                 }
-                const isVid = Boolean(item.is_video);
-                const thumbHtml = isVid
-                    ? `<div style="height:130px; display:flex; align-items:center; justify-content:center; background:#000; font-size:2rem;">🎬</div>`
-                    : `<img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(item.title)}" class="media-gallery-thumb" onerror="this.onerror=null; this.src='/static/icons/image-placeholder.svg'">`;
-
-                return `
-                    <div class="media-gallery-card">
-                        ${thumbHtml}
-                        <div class="media-gallery-info">
-                            <span class="badge badge-${item.source === 'Demo Screenshot' ? 'success' : (item.source === 'Uploaded Media' ? 'info' : 'neutral')}" style="font-size:0.7rem; align-self:flex-start;">
-                                ${escapeHtml(item.source)}
-                            </span>
-                            <div class="media-gallery-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
-                            <button type="button" class="btn btn-primary btn-sm" style="margin-top:0.5rem; width:100%;" onclick="selectMediaForDraft('${escapeHtml(item.url)}')">
-                                ✅ Select Media
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join("");
+            }
         }
+
+        // Update counts
+        const allCount = modalAvailableMedia.length;
+        const imgCount = modalAvailableMedia.filter(m => !m.is_video).length;
+        const vidCount = modalAvailableMedia.filter(m => m.is_video).length;
+
+        const cAll = document.getElementById("filter-count-all");
+        const cImg = document.getElementById("filter-count-image");
+        const cVid = document.getElementById("filter-count-video");
+        if (cAll) cAll.textContent = allCount;
+        if (cImg) cImg.textContent = imgCount;
+        if (cVid) cVid.textContent = vidCount;
+
+        // Render tray and grid
+        renderModalSequenceTray();
+        renderModalMediaGrid();
     } catch (err) {
         if (loading) loading.style.display = "none";
         showNotification("Failed to load available media: " + err.message, "danger");
     }
 }
 
-async function selectMediaForDraft(mediaPath) {
+function filterModalMedia(filterType, btnEl) {
+    modalActiveFilter = filterType;
+    const buttons = document.querySelectorAll(".media-filter-btn");
+    buttons.forEach(b => b.classList.remove("active"));
+    if (btnEl) btnEl.classList.add("active");
+    renderModalMediaGrid();
+}
+
+function handleModalMediaSearch(query) {
+    modalSearchQuery = (query || "").toLowerCase().trim();
+    renderModalMediaGrid();
+}
+
+function toggleModalMediaSelection(mediaUrl) {
+    const existingIndex = modalSelectedMedia.findIndex(m => m.url === mediaUrl);
+    if (existingIndex !== -1) {
+        // Deselect and remove from sequence; subsequent items shift down
+        modalSelectedMedia.splice(existingIndex, 1);
+    } else {
+        // Add to sequence in the exact order selected
+        const item = modalAvailableMedia.find(m => m.url === mediaUrl) || {
+            url: mediaUrl,
+            title: mediaUrl.split("/").pop() || "Media Item",
+            is_video: false,
+            source: "Selected",
+        };
+        modalSelectedMedia.push(item);
+    }
+
+    renderModalSequenceTray();
+    renderModalMediaGrid();
+}
+
+function moveModalMediaSequence(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= modalSelectedMedia.length) return;
+    const item = modalSelectedMedia.splice(index, 1)[0];
+    modalSelectedMedia.splice(newIndex, 0, item);
+    renderModalSequenceTray();
+    renderModalMediaGrid();
+}
+
+function removeModalMediaSequence(index) {
+    modalSelectedMedia.splice(index, 1);
+    renderModalSequenceTray();
+    renderModalMediaGrid();
+}
+
+function clearModalMediaSelection() {
+    modalSelectedMedia = [];
+    renderModalSequenceTray();
+    renderModalMediaGrid();
+}
+
+function renderModalSequenceTray() {
+    const tray = document.getElementById("modal-selection-tray");
+    const countEl = document.getElementById("modal-selected-count");
+    const chipsContainer = document.getElementById("modal-sequence-chips");
+    const applyBtn = document.getElementById("btn-apply-modal-media");
+    const footerHint = document.getElementById("modal-footer-hint");
+
+    const totalSelected = modalSelectedMedia.length;
+
+    if (totalSelected === 0) {
+        if (tray) tray.style.display = "none";
+        if (applyBtn) applyBtn.textContent = "Apply Selection (0)";
+        if (footerHint) footerHint.textContent = "Click cards to select items in the exact order you want them uploaded.";
+        return;
+    }
+
+    if (tray) tray.style.display = "flex";
+    if (countEl) countEl.textContent = `${totalSelected} item${totalSelected > 1 ? 's' : ''} in upload sequence`;
+    if (applyBtn) applyBtn.textContent = `✅ Apply Selection (${totalSelected})`;
+    if (footerHint) footerHint.textContent = `Items will upload in order: [${modalSelectedMedia.map((_, i) => i + 1).join(', ')}]`;
+
+    if (chipsContainer) {
+        chipsContainer.innerHTML = modalSelectedMedia.map((item, idx) => {
+            const isFirst = (idx === 0);
+            const isLast = (idx === totalSelected - 1);
+            const icon = item.is_video ? "🎬" : "📷";
+            const shortTitle = item.title.length > 20 ? item.title.slice(0, 17) + "..." : item.title;
+
+            return `
+                <div class="media-sequence-chip">
+                    <span class="seq-number">#${idx + 1}</span>
+                    <span>${icon}</span>
+                    <span style="font-weight: 500;" title="${escapeHtml(item.title)}">${escapeHtml(shortTitle)}</span>
+                    <button type="button" class="seq-btn" onclick="moveModalMediaSequence(${idx}, -1)" ${isFirst ? 'disabled style="opacity:0.3;"' : ''} title="Move Earlier">◀</button>
+                    <button type="button" class="seq-btn" onclick="moveModalMediaSequence(${idx}, 1)" ${isLast ? 'disabled style="opacity:0.3;"' : ''} title="Move Later">▶</button>
+                    <button type="button" class="seq-btn btn-remove" onclick="removeModalMediaSequence(${idx})" title="Remove from sequence">✕</button>
+                </div>
+            `;
+        }).join("");
+    }
+}
+
+function renderModalMediaGrid() {
+    const grid = document.getElementById("media-grid");
+    const empty = document.getElementById("media-modal-empty");
+    if (!grid) return;
+
+    // Filter items
+    let filtered = modalAvailableMedia.filter(item => {
+        // Filter Type
+        if (modalActiveFilter === "image" && item.is_video) return false;
+        if (modalActiveFilter === "video" && !item.is_video) return false;
+        if (modalActiveFilter === "repo" && (!item.source || !item.source.toLowerCase().includes("repo"))) return false;
+        if (modalActiveFilter === "demo" && (!item.source || (!item.source.toLowerCase().includes("demo") && !item.source.toLowerCase().includes("screenshot")))) return false;
+
+        // Search Query
+        if (modalSearchQuery) {
+            const titleMatch = (item.title || "").toLowerCase().includes(modalSearchQuery);
+            const urlMatch = (item.url || "").toLowerCase().includes(modalSearchQuery);
+            if (!titleMatch && !urlMatch) return false;
+        }
+
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        grid.innerHTML = "";
+        if (empty) empty.style.display = "block";
+        return;
+    }
+
+    if (empty) empty.style.display = "none";
+
+    grid.innerHTML = filtered.map(item => {
+        let mediaUrl = item.url;
+        if (!mediaUrl.startsWith("http://") && !mediaUrl.startsWith("https://") && !mediaUrl.startsWith("/")) {
+            mediaUrl = "/" + mediaUrl;
+        }
+
+        // Check if selected and find its sequence position
+        const selectedIndex = modalSelectedMedia.findIndex(m => m.url === item.url);
+        const isSelected = (selectedIndex !== -1);
+        const orderNumber = selectedIndex + 1;
+
+        const isVid = Boolean(item.is_video);
+        const thumbHtml = isVid
+            ? `<div style="height:130px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#000; font-size:2rem; position:relative;">
+                 <span>🎬</span>
+                 <span style="font-size:0.7rem; color:#94a3b8; margin-top:4px;">MP4 / Video Asset</span>
+               </div>`
+            : `<img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(item.title)}" class="media-gallery-thumb" onerror="this.onerror=null; this.src='/static/icons/image-placeholder.svg'">`;
+
+        const badgeHtml = isSelected
+            ? `<div class="media-order-badge" title="Upload Order Position #${orderNumber}">#${orderNumber}</div>`
+            : "";
+
+        return `
+            <div class="media-gallery-card ${isSelected ? 'is-selected' : ''}" onclick="toggleModalMediaSelection('${escapeHtml(item.url)}')">
+                ${badgeHtml}
+                ${thumbHtml}
+                <div class="media-gallery-info">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="badge badge-${item.source === 'Demo Screenshot' ? 'success' : (item.source === 'Uploaded Media' ? 'info' : 'neutral')}" style="font-size:0.68rem;">
+                            ${escapeHtml(item.source)}
+                        </span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">${isVid ? 'Video' : 'Image'}</span>
+                    </div>
+                    <div class="media-gallery-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+                    <button type="button" class="btn ${isSelected ? 'btn-success' : 'btn-secondary'} btn-sm" style="margin-top:0.4rem; width:100%; font-size:0.75rem;" onclick="event.stopPropagation(); toggleModalMediaSelection('${escapeHtml(item.url)}')">
+                        ${isSelected ? `✓ Selected (#${orderNumber})` : '+ Add to Sequence'}
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+async function applyModalMediaSelection() {
     if (!currentDraftId) {
         showNotification("No active draft to attach media to.", "warning");
         return;
     }
 
+    const orderedUrls = modalSelectedMedia.map(m => m.url);
+    const primaryUrl = orderedUrls.length > 0 ? orderedUrls[0] : null;
+
     try {
         const res = await fetch(`/api/drafts/${currentDraftId}/media`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ media_path: mediaPath }),
+            body: JSON.stringify({
+                media_path: primaryUrl,
+                media_paths: orderedUrls,
+            }),
         });
         const data = await res.json();
         if (res.ok) {
             currentDraftScreenshot = data.media_path;
-            renderDraftMediaPreview(currentDraftScreenshot);
+            currentDraftMediaPaths = (data.media_paths && data.media_paths.length) ? data.media_paths : orderedUrls;
+            renderDraftMediaPreview(currentDraftScreenshot, currentDraftMediaPaths);
+            updateLivePostPreview();
             closeMediaSelectorModal();
-            showNotification("Media attached to draft post!", "success");
+            showNotification(`Attached ${orderedUrls.length} media item(s) in custom upload sequence!`, "success");
         } else {
-            showNotification(data.detail || "Failed to attach media.", "danger");
+            showNotification(data.detail || "Failed to attach media sequence.", "danger");
         }
     } catch (err) {
-        showNotification("Error attaching media: " + err.message, "danger");
+        showNotification("Error attaching media sequence: " + err.message, "danger");
     }
 }
 
@@ -796,6 +1290,9 @@ async function loadDraftById(draftId) {
         const draft = await res.json();
         currentDraftId = draft.id;
         currentDraftScreenshot = draft.screenshot_path;
+        currentDraftMediaPaths = (draft.media_paths && draft.media_paths.length > 0)
+            ? [...draft.media_paths]
+            : (draft.screenshot_path ? [draft.screenshot_path] : []);
         currentProjectId = draft.project_id;
         if (draft.repo_url) window.currentProjectRepoUrl = draft.repo_url;
         if (draft.demo_url) window.currentProjectDemoUrl = draft.demo_url;
@@ -1375,6 +1872,18 @@ async function loadIntegrationsStatus() {
                 if (liStatusBadge) {
                     liStatusBadge.textContent = `Connected (${name})`;
                     liStatusBadge.className = "badge badge-success";
+                }
+                // Sync Live Feed Preview author info
+                const previewName = document.getElementById("li-preview-name");
+                const previewAvatar = document.getElementById("li-preview-avatar");
+                const previewReactions = document.getElementById("li-preview-reactions");
+                if (previewName) previewName.textContent = name;
+                if (previewAvatar) {
+                    const initials = name.split(" ").filter(Boolean).map(w => w[0]).join("").slice(0, 2).toUpperCase() || "LI";
+                    previewAvatar.innerHTML = `<span>${escapeHtml(initials)}</span>`;
+                }
+                if (previewReactions) {
+                    previewReactions.textContent = `${escapeHtml(name)} and 24 others`;
                 }
             } else {
                 if (dashLiBadge) {

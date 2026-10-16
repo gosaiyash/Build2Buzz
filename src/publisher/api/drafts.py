@@ -27,6 +27,7 @@ class UpdateDraftRequest(BaseModel):
 
 class UpdateMediaRequest(BaseModel):
     media_path: str | None = None
+    media_paths: list[str] | None = None
 
 
 @router.get("/{draft_id}")
@@ -39,6 +40,13 @@ async def get_draft(draft_id: int, db: Session = Depends(get_db)):
 
     project = db.query(Project).filter(Project.id == draft.project_id).first()
 
+    meta = draft.post_metadata or {}
+    paths = meta.get("media_paths")
+    if not paths and draft.screenshot_path:
+        paths = [draft.screenshot_path]
+    elif not paths:
+        paths = []
+
     return {
         "id": draft.id,
         "project_id": draft.project_id,
@@ -46,10 +54,11 @@ async def get_draft(draft_id: int, db: Session = Depends(get_db)):
         "body": draft.body,
         "style": draft.style,
         "status": draft.status.value,
-        "metadata": draft.post_metadata,
+        "metadata": meta,
         "repo_url": project.repo_url if project else None,
         "demo_url": project.demo_url if project else None,
         "screenshot_path": draft.screenshot_path,
+        "media_paths": paths,
         "created_at": draft.created_at.isoformat(),
         "updated_at": draft.updated_at.isoformat(),
     }
@@ -143,11 +152,21 @@ async def attach_draft_media(
     if not draft:
         raise HTTPException(status_code=404, detail="Draft not found.")
 
-    updated = draft_repo.update_media(draft_id, req.media_path)
+    if req.media_paths is not None:
+        paths = [p for p in req.media_paths if p and p.strip()]
+    elif req.media_path:
+        paths = [req.media_path.strip()]
+    else:
+        paths = []
+
+    primary_path = paths[0] if paths else None
+    updated = draft_repo.update_media(draft_id, primary_path, media_paths=paths)
     return {
         "status": "success",
-        "message": "Attached media updated.",
+        "message": f"Attached {len(paths)} media item(s).",
         "media_path": updated.screenshot_path,
+        "screenshot_path": updated.screenshot_path,
+        "media_paths": updated.post_metadata.get("media_paths", paths),
         "draft_state": updated.status.value,
     }
 
@@ -168,6 +187,8 @@ async def detach_draft_media(
         "status": "success",
         "message": "Attached media removed.",
         "media_path": None,
+        "screenshot_path": None,
+        "media_paths": [],
         "draft_state": updated.status.value,
     }
 
