@@ -177,6 +177,7 @@ async def get_project(project_id: int, db: Session = Depends(get_db)):
                 "style": d.style,
                 "status": d.status.value,
                 "screenshot_path": d.screenshot_path,
+                "media_paths": (d.post_metadata or {}).get("media_paths", ([d.screenshot_path] if d.screenshot_path else [])),
                 "created_at": d.created_at.isoformat(),
             }
             for d in drafts
@@ -326,32 +327,39 @@ async def generate_draft_for_project(
         logger.error("AI Generation error: %s", exc)
         raise HTTPException(status_code=500, detail=f"AI generation failed: {str(exc)}")
 
-    # Locate screenshot or media if available
+    # Locate all screenshots and repo media assets
     screenshot_path = None
+    media_paths: list[str] = []
     if preferences.include_screenshot:
-        # Check if project has an observed screenshot or media asset
+        # Collect all observed demo screenshots and repository media assets by default
         for ev in evidence_items:
-            if ev.source_type == "demo" and ("screenshot" in ev.content.lower() or ev.category == "media"):
-                screenshot_path = ev.source_url
-                break
-        if not screenshot_path:
-            for ev in evidence_items:
-                if ev.category == "media" and ev.source_url:
-                    screenshot_path = ev.source_url
-                    break
+            if ev.source_url and (
+                ev.category == "media"
+                or "screenshot" in ev.content.lower()
+                or "image" in ev.content.lower()
+                or "video" in ev.content.lower()
+            ):
+                clean_u = ev.source_url.split("?")[0].lower()
+                if any(clean_u.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mov", ".webm", ".mkv"]) or ev.category == "media":
+                    if ev.source_url not in media_paths:
+                        media_paths.append(ev.source_url)
+        if media_paths:
+            screenshot_path = media_paths[0]
 
     # Save Draft in SQLite
+    post_meta = {
+        "hashtags": draft_output.hashtags,
+        "project_links": draft_output.project_links,
+        "evidence_references": draft_output.evidence_references,
+        "unverified_cautions": draft_output.unverified_cautions,
+        "ai_mode": settings_rec.active_ai_mode,
+        "media_paths": media_paths,
+    }
     draft = draft_repo.create(
         project_id=project.id,
         body=draft_output.post_text,
         style=preferences.style,
-        post_metadata={
-            "hashtags": draft_output.hashtags,
-            "project_links": draft_output.project_links,
-            "evidence_references": draft_output.evidence_references,
-            "unverified_cautions": draft_output.unverified_cautions,
-            "ai_mode": settings_rec.active_ai_mode,
-        },
+        post_metadata=post_meta,
         screenshot_path=screenshot_path,
     )
 
@@ -369,5 +377,6 @@ async def generate_draft_for_project(
         "repo_url": project.repo_url,
         "demo_url": project.demo_url,
         "screenshot_path": draft.screenshot_path,
+        "media_paths": media_paths,
     }
 

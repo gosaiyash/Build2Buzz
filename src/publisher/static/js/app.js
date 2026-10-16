@@ -1025,6 +1025,16 @@ async function openMediaSelectorModal() {
             }
         }
 
+        // BY DEFAULT: Auto-select all fetched repository media if no custom multi-selection exists yet
+        if (modalSelectedMedia.length <= 1 && modalAvailableMedia.length > 0) {
+            const repoItems = modalAvailableMedia.filter(m => m.source && (m.source.toLowerCase().includes("repo") || m.source.toLowerCase().includes("asset") || m.source.toLowerCase().includes("demo") || m.source.toLowerCase().includes("screenshot")));
+            if (repoItems.length > 0) {
+                modalSelectedMedia = [...repoItems];
+            } else {
+                modalSelectedMedia = [...modalAvailableMedia];
+            }
+        }
+
         // Update counts
         const allCount = modalAvailableMedia.length;
         const imgCount = modalAvailableMedia.filter(m => !m.is_video).length;
@@ -1044,6 +1054,48 @@ async function openMediaSelectorModal() {
         if (loading) loading.style.display = "none";
         showNotification("Failed to load available media: " + err.message, "danger");
     }
+}
+
+// Multi-select batch actions
+function selectAllRepoMedia() {
+    const repoItems = modalAvailableMedia.filter(m => m.source && (m.source.toLowerCase().includes("repo") || m.source.toLowerCase().includes("asset")));
+    const toSelect = repoItems.length > 0 ? repoItems : modalAvailableMedia;
+
+    modalSelectedMedia = [...toSelect];
+    renderModalSequenceTray();
+    renderModalMediaGrid();
+    showNotification(`Selected ${modalSelectedMedia.length} repository media item(s) in order!`, "info");
+}
+
+function selectAllVisibleModalMedia() {
+    const visible = getCurrentlyFilteredModalMedia();
+    for (const item of visible) {
+        if (!modalSelectedMedia.some(m => m.url === item.url)) {
+            modalSelectedMedia.push(item);
+        }
+    }
+    renderModalSequenceTray();
+    renderModalMediaGrid();
+    showNotification(`Selected ${modalSelectedMedia.length} media item(s)!`, "info");
+}
+
+function getCurrentlyFilteredModalMedia() {
+    return modalAvailableMedia.filter(item => {
+        // Filter Type
+        if (modalActiveFilter === "image" && item.is_video) return false;
+        if (modalActiveFilter === "video" && !item.is_video) return false;
+        if (modalActiveFilter === "repo" && (!item.source || !item.source.toLowerCase().includes("repo"))) return false;
+        if (modalActiveFilter === "demo" && (!item.source || (!item.source.toLowerCase().includes("demo") && !item.source.toLowerCase().includes("screenshot")))) return false;
+
+        // Search Query
+        if (modalSearchQuery) {
+            const titleMatch = (item.title || "").toLowerCase().includes(modalSearchQuery);
+            const urlMatch = (item.url || "").toLowerCase().includes(modalSearchQuery);
+            if (!titleMatch && !urlMatch) return false;
+        }
+
+        return true;
+    });
 }
 
 function filterModalMedia(filterType, btnEl) {
@@ -1077,6 +1129,14 @@ function toggleModalMediaSelection(mediaUrl) {
 
     renderModalSequenceTray();
     renderModalMediaGrid();
+}
+
+function toggleModalMediaByIndex(index) {
+    if (index < 0 || index >= modalAvailableMedia.length) return;
+    const item = modalAvailableMedia[index];
+    if (item) {
+        toggleModalMediaSelection(item.url);
+    }
 }
 
 function moveModalMediaSequence(index, direction) {
@@ -1147,23 +1207,7 @@ function renderModalMediaGrid() {
     const empty = document.getElementById("media-modal-empty");
     if (!grid) return;
 
-    // Filter items
-    let filtered = modalAvailableMedia.filter(item => {
-        // Filter Type
-        if (modalActiveFilter === "image" && item.is_video) return false;
-        if (modalActiveFilter === "video" && !item.is_video) return false;
-        if (modalActiveFilter === "repo" && (!item.source || !item.source.toLowerCase().includes("repo"))) return false;
-        if (modalActiveFilter === "demo" && (!item.source || (!item.source.toLowerCase().includes("demo") && !item.source.toLowerCase().includes("screenshot")))) return false;
-
-        // Search Query
-        if (modalSearchQuery) {
-            const titleMatch = (item.title || "").toLowerCase().includes(modalSearchQuery);
-            const urlMatch = (item.url || "").toLowerCase().includes(modalSearchQuery);
-            if (!titleMatch && !urlMatch) return false;
-        }
-
-        return true;
-    });
+    const filtered = getCurrentlyFilteredModalMedia();
 
     if (filtered.length === 0) {
         grid.innerHTML = "";
@@ -1196,8 +1240,17 @@ function renderModalMediaGrid() {
             ? `<div class="media-order-badge" title="Upload Order Position #${orderNumber}">#${orderNumber}</div>`
             : "";
 
+        const checkboxHtml = `
+            <div class="media-checkbox-box ${isSelected ? 'checked' : ''}" title="${isSelected ? 'Deselect item' : 'Select item for upload'}">
+                ${isSelected ? '✓' : ''}
+            </div>
+        `;
+
+        const globalIndex = modalAvailableMedia.findIndex(m => m.url === item.url);
+
         return `
-            <div class="media-gallery-card ${isSelected ? 'is-selected' : ''}" onclick="toggleModalMediaSelection('${escapeHtml(item.url)}')">
+            <div class="media-gallery-card ${isSelected ? 'is-selected' : ''}" onclick="toggleModalMediaByIndex(${globalIndex})">
+                ${checkboxHtml}
                 ${badgeHtml}
                 ${thumbHtml}
                 <div class="media-gallery-info">
@@ -1208,7 +1261,7 @@ function renderModalMediaGrid() {
                         <span style="font-size: 0.7rem; color: var(--text-muted);">${isVid ? 'Video' : 'Image'}</span>
                     </div>
                     <div class="media-gallery-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
-                    <button type="button" class="btn ${isSelected ? 'btn-success' : 'btn-secondary'} btn-sm" style="margin-top:0.4rem; width:100%; font-size:0.75rem;" onclick="event.stopPropagation(); toggleModalMediaSelection('${escapeHtml(item.url)}')">
+                    <button type="button" class="btn ${isSelected ? 'btn-success' : 'btn-secondary'} btn-sm" style="margin-top:0.4rem; width:100%; font-size:0.75rem;" onclick="event.stopPropagation(); toggleModalMediaByIndex(${globalIndex})">
                         ${isSelected ? `✓ Selected (#${orderNumber})` : '+ Add to Sequence'}
                     </button>
                 </div>

@@ -68,7 +68,7 @@ class EvidenceEngine:
             )
 
         if info.repo_media_urls:
-            for media in info.repo_media_urls[:6]:
+            for media in info.repo_media_urls[:20]:
                 items.append(
                     EvidenceItem(
                         source_type="readme",

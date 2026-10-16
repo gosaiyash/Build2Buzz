@@ -1866,6 +1866,32 @@ a:hover {
   transform: translateY(-2px);
 }
 
+.media-checkbox-box {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #fff;
+  z-index: 2;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.media-gallery-card.is-selected .media-checkbox-box {
+  background: var(--accent-primary);
+  border-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
 .media-order-badge {
   position: absolute;
   top: 8px;

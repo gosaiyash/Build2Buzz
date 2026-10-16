@@ -735,7 +735,7 @@
             </div>
 
             <!-- Filter Tabs & Search -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; flex-wrap: wrap; gap: 0.5rem;">
                 <div class="media-filter-row" style="margin: 0;">
                     <button type="button" class="media-filter-btn active" onclick="filterModalMedia('all', this)">All Media (<span id="filter-count-all">0</span>)</button>
                     <button type="button" class="media-filter-btn" onclick="filterModalMedia('image', this)">Photos & GIFs (<span id="filter-count-image">0</span>)</button>
@@ -744,6 +744,24 @@
                     <button type="button" class="media-filter-btn" onclick="filterModalMedia('demo', this)">Demo Screenshots</button>
                 </div>
                 <input type="text" id="modal-media-search" class="form-control" placeholder="Search by name..." style="max-width: 200px; padding: 0.3rem 0.65rem; font-size: 0.8rem;" oninput="handleModalMediaSearch(this.value)">
+            </div>
+
+            <!-- Multi-Select Batch Actions -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; padding: 0.45rem 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllRepoMedia()" style="font-size: 0.75rem; padding: 3px 10px; font-weight: 600;" title="Select all repository media in order">
+                        📦 Select All Repo Media
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllVisibleModalMedia()" style="font-size: 0.75rem; padding: 3px 10px;" title="Select all visible items in current view">
+                        ☑️ Select All Visible
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="clearModalMediaSelection()" style="font-size: 0.75rem; padding: 3px 10px;" title="Deselect all items">
+                        ◻️ Deselect All
+                    </button>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem;">
+                    <span>💡 Tip: Click cards or checkboxes to multi-select. Order is preserved.</span>
+                </div>
             </div>
 
             <div id="media-modal-loading" style="display: none; text-align: center; padding: 2rem;">
