@@ -203,7 +203,7 @@ async def get_project_available_media(project_id: int, db: Session = Depends(get
         url = e.source_url
         if not url:
             continue
-        if e.category == "media" or "screenshot" in e.content.lower() or "image" in e.content.lower():
+        if e.category == "media" or "screenshot" in e.content.lower() or "image" in e.content.lower() or "video" in e.content.lower():
             if url not in seen_urls:
                 seen_urls.add(url)
                 is_video = any(url.lower().endswith(ext) for ext in [".mp4", ".mov", ".webm", ".mkv"])

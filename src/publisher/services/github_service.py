@@ -280,10 +280,11 @@ class GitHubClient:
                         except Exception:
                             pass
 
-                    # Scan for images in static/images, assets, or screenshots folders
-                    image_dirs = ["static/images", "assets", "screenshots", "images", "docs/images"]
+                    # Scan for images and videos in media folders
+                    image_dirs = ["docs/media", "docs/screenshots", "screenshots", "assets", "images", "docs/images", "static/images"]
+                    allowed_media_exts = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mov", ".webm"]
                     for img_dir in image_dirs:
-                        if len(repo_media_urls) >= 12:
+                        if len(repo_media_urls) >= 16:
                             break
                         try:
                             dir_url = f"{self.base_url}/repos/{owner}/{repo}/contents/{img_dir}"
@@ -292,21 +293,22 @@ class GitHubClient:
                                 for f in dir_res.json():
                                     fname = f.get("name", "")
                                     furl = f.get("download_url") or f.get("html_url")
-                                    if fname and furl and any(fname.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif"]):
+                                    if fname and furl and any(fname.lower().endswith(ext) for ext in allowed_media_exts):
+                                        is_vid = any(fname.lower().endswith(v) for v in [".mp4", ".mov", ".webm"])
                                         repo_media_urls.append({
                                             "title": fname,
                                             "url": furl,
-                                            "type": "image",
+                                            "type": "video" if is_vid else "image",
                                             "path": f"{img_dir}/{fname}",
                                         })
-                                        if len(repo_media_urls) >= 12:
+                                        if len(repo_media_urls) >= 16:
                                             break
                         except Exception:
                             continue
             except Exception as exc:
                 logger.warning("Could not inspect repo contents for %s/%s: %s", owner, repo, exc)
 
-            # Scan README for keywords & images
+            # Scan README for keywords & images/videos
             if readme_content:
                 known_keywords = {
                     "django": "Django",
@@ -340,22 +342,44 @@ class GitHubClient:
                         detected_technologies.add(display_name)
 
                 # Scan markdown image links
+                allowed_media_exts = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mov", ".webm"]
                 img_matches = re.findall(r"!\[(.*?)\]\(([^\)\s]+)\)", readme_content)
                 for alt, url_or_path in img_matches:
                     clean_path = url_or_path.strip()
-                    if any(clean_path.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif"]):
+                    if any(clean_path.lower().endswith(ext) for ext in allowed_media_exts):
                         if clean_path.startswith("http://") or clean_path.startswith("https://"):
                             img_url = clean_path
                         else:
                             clean_rel = clean_path.lstrip("./")
                             branch = data.get("default_branch", "main")
                             img_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{clean_rel}"
+                        is_vid = any(clean_path.lower().endswith(v) for v in [".mp4", ".mov", ".webm"])
                         repo_media_urls.append({
-                            "title": alt or Path(clean_path).name or "Repository Screenshot",
+                            "title": alt or Path(clean_path).name or "Repository Asset",
                             "url": img_url,
-                            "type": "image",
+                            "type": "video" if is_vid else "image",
                             "path": clean_path,
                         })
+
+                # Scan HTML video / source tags
+                html_media = re.findall(r'<(?:source|video|img)[^>]+src=["\']([^"\']+)["\']', readme_content, re.IGNORECASE)
+                for clean_path in html_media:
+                    clean_path = clean_path.strip()
+                    if any(clean_path.lower().endswith(ext) for ext in allowed_media_exts):
+                        if clean_path.startswith("http://") or clean_path.startswith("https://"):
+                            m_url = clean_path
+                        else:
+                            clean_rel = clean_path.lstrip("./")
+                            branch = data.get("default_branch", "main")
+                            m_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{clean_rel}"
+                        if not any(r["url"] == m_url for r in repo_media_urls):
+                            is_vid = any(clean_path.lower().endswith(v) for v in [".mp4", ".mov", ".webm"])
+                            repo_media_urls.append({
+                                "title": Path(clean_path).name or "Repository Media",
+                                "url": m_url,
+                                "type": "video" if is_vid else "image",
+                                "path": clean_path,
+                            })
 
             return GitHubRepoInfo(
                 owner=owner,

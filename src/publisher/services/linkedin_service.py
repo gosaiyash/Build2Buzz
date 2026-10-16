@@ -304,23 +304,35 @@ class LinkedInPublishingService:
             "isReshareDisabledByAuthor": False,
         }
 
-        # Optional Media Upload (Phase 11)
+        # Media Upload (Image, GIF, or Video)
         if draft.screenshot_path:
             try:
                 from src.publisher.services.media_service import MediaService
-                image_urn = await MediaService.upload_image_to_linkedin(
-                    file_path=draft.screenshot_path,
+                media_urn, media_type = await MediaService.upload_media_to_linkedin(
+                    file_path_or_url=draft.screenshot_path,
                     access_token=access_token,
                     author_urn=author_urn,
                 )
                 payload["content"] = {
                     "media": {
-                        "id": image_urn,
+                        "id": media_urn,
                         "title": project.name,
                     }
                 }
+                logger.info(
+                    "Attached %s media (%s) to LinkedIn post payload for Draft #%d",
+                    media_type,
+                    media_urn,
+                    draft.id,
+                )
             except Exception as media_err:
-                logger.warning("Could not upload attached screenshot to LinkedIn: %s. Continuing with text post.", media_err)
+                logger.error("Could not upload attached media to LinkedIn: %s", media_err)
+                return (
+                    False,
+                    f"Publishing failed: Could not upload attached media to LinkedIn ({media_err}). "
+                    "Please check the media format or detach media in the editor to publish text-only.",
+                    "MediaUploadFailed",
+                )
 
         active_version = cls.get_api_version()
         headers = {

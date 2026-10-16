@@ -1,6 +1,6 @@
 """Unit and integration tests for LinkedIn OAuth and publishing workflows."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 import pytest
 import httpx
 from src.publisher.db.models import Draft, DraftStatus, Project
@@ -347,5 +347,78 @@ async def test_publishing_handles_persistent_426():
         assert success is False
         assert err_cat == "VersionUnsupported"
         assert "LinkedIn API version error" in err_msg
+
+
+@pytest.mark.asyncio
+async def test_publishing_with_attached_media_success():
+    """Verify publishing attaches media URN to content payload when screenshot_path is set."""
+    project = Project(name="Build2Buzz", repo_url="https://github.com/example/repo")
+    draft = Draft(
+        id=6,
+        project_id=1,
+        body="Draft with attached media payload.",
+        status=DraftStatus.APPROVED,
+        screenshot_path="docs/media/build2buzz_preview.gif",
+    )
+
+    resp_201 = httpx.Response(
+        status_code=201,
+        headers={"x-restli-id": "urn:li:share:media_post_123"},
+        json={"id": "urn:li:share:media_post_123"},
+    )
+
+    posted_payload = {}
+
+    async def mock_post(url, headers=None, json=None):
+        nonlocal posted_payload
+        posted_payload = json
+        return resp_201
+
+    with patch("src.publisher.services.media_service.MediaService.upload_media_to_linkedin", new_callable=AsyncMock) as mock_media, \
+         patch("httpx.AsyncClient.post", side_effect=mock_post):
+        mock_media.return_value = ("urn:li:image:uploaded_img_789", "image")
+
+        success, post_urn, err_cat = await LinkedInPublishingService.publish_draft(
+            draft=draft,
+            project=project,
+            access_token="valid-token",
+            author_urn="urn:li:person:123",
+            submission_id="sub-media-test",
+        )
+
+        assert success is True
+        assert post_urn == "urn:li:share:media_post_123"
+        assert err_cat is None
+        assert "content" in posted_payload
+        assert posted_payload["content"]["media"]["id"] == "urn:li:image:uploaded_img_789"
+
+
+@pytest.mark.asyncio
+async def test_publishing_with_media_upload_failure():
+    """Verify publishing fails with MediaUploadFailed when media upload raises an error."""
+    project = Project(name="Build2Buzz", repo_url="https://github.com/example/repo")
+    draft = Draft(
+        id=7,
+        project_id=1,
+        body="Draft with failing media upload.",
+        status=DraftStatus.APPROVED,
+        screenshot_path="invalid_path.png",
+    )
+
+    with patch("src.publisher.services.media_service.MediaService.upload_media_to_linkedin", new_callable=AsyncMock) as mock_media:
+        mock_media.side_effect = ValueError("File corrupted or unreachable")
+
+        success, err_msg, err_cat = await LinkedInPublishingService.publish_draft(
+            draft=draft,
+            project=project,
+            access_token="valid-token",
+            author_urn="urn:li:person:123",
+            submission_id="sub-media-err",
+        )
+
+        assert success is False
+        assert err_cat == "MediaUploadFailed"
+        assert "Could not upload attached media to LinkedIn" in err_msg
+
 
 
