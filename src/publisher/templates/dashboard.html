@@ -1,189 +1,488 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- TAB A: DASHBOARD -->
-<div id="tab-dashboard" class="tab-panel active">
-    <!-- Metrics Grid -->
+<!-- =========================================================================
+     TAB 1: DASHBOARD (Operations, Bento Metrics, Pipeline & Health)
+     ========================================================================= -->
+<div id="tab-dashboard" class="tab-panel active" role="tabpanel" aria-labelledby="tab-dashboard-heading">
+    <!-- Bento Grid Metrics -->
     <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-label">Projects Analyzed</div>
-            <div id="metric-total-projects" class="metric-value">0</div>
-            <div class="metric-sub">Across GitHub repositories</div>
+        <div class="metric-card metric-card-indigo">
+            <div class="metric-card-header">
+                <span class="metric-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </span>
+                <span class="metric-badge-tag">Ingested</span>
+            </div>
+            <div class="metric-body">
+                <div class="metric-label">Projects Analyzed</div>
+                <div id="metric-total-projects" class="metric-value font-mono">0</div>
+                <div class="metric-sub">Across GitHub repositories</div>
+            </div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">Drafts Generated</div>
-            <div id="metric-total-drafts" class="metric-value">0</div>
-            <div class="metric-sub">Across all post styles</div>
+
+        <div class="metric-card metric-card-cyan">
+            <div class="metric-card-header">
+                <span class="metric-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </span>
+                <span class="metric-badge-tag">AI Synthesized</span>
+            </div>
+            <div class="metric-body">
+                <div class="metric-label">Drafts Generated</div>
+                <div id="metric-total-drafts" class="metric-value font-mono">0</div>
+                <div class="metric-sub">Across all post styles</div>
+            </div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">Awaiting Approval</div>
-            <div id="metric-awaiting-approval" class="metric-value">0</div>
-            <div class="metric-sub">Human-in-the-loop review</div>
+
+        <div class="metric-card metric-card-amber">
+            <div class="metric-card-header">
+                <span class="metric-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </span>
+                <span class="metric-badge-tag">Human Review</span>
+            </div>
+            <div class="metric-body">
+                <div class="metric-label">Awaiting Approval</div>
+                <div id="metric-awaiting-approval" class="metric-value font-mono">0</div>
+                <div class="metric-sub">Human-in-the-loop review</div>
+            </div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">Published to LinkedIn</div>
-            <div id="metric-published-count" class="metric-value">0</div>
-            <div class="metric-sub">Official API verified</div>
+
+        <div class="metric-card metric-card-emerald">
+            <div class="metric-card-header">
+                <span class="metric-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                        <rect x="2" y="9" width="4" height="12"></rect>
+                        <circle cx="4" cy="4" r="2"></circle>
+                    </svg>
+                </span>
+                <span class="metric-badge-tag">Live Feed</span>
+            </div>
+            <div class="metric-body">
+                <div class="metric-label">Published to LinkedIn</div>
+                <div id="metric-published-count" class="metric-value font-mono">0</div>
+                <div class="metric-sub">Official API verified</div>
+            </div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">Publish Failures</div>
-            <div id="metric-failed-count" class="metric-value">0</div>
-            <div class="metric-sub">Safe rollback preserved</div>
+
+        <div class="metric-card metric-card-rose">
+            <div class="metric-card-header">
+                <span class="metric-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                        <path d="M3 3v5h5"></path>
+                    </svg>
+                </span>
+                <span class="metric-badge-tag">Safety Rollback</span>
+            </div>
+            <div class="metric-body">
+                <div class="metric-label">Publish Failures</div>
+                <div id="metric-failed-count" class="metric-value font-mono">0</div>
+                <div class="metric-sub">Safe rollback preserved</div>
+            </div>
         </div>
     </div>
 
-    <!-- System Status Row -->
+    <!-- Quick Workflow Pipeline Banner -->
+    <div class="card workflow-banner">
+        <div class="workflow-header">
+            <div class="workflow-title-wrap">
+                <span class="workflow-step-pill">Pipeline</span>
+                <h2 class="card-title">Publisher Workflow Pipeline</h2>
+            </div>
+            <span class="workflow-subtitle">Zero Hallucination &bull; Human-in-the-Loop &bull; Local Windows Isolation</span>
+        </div>
+        <div class="workflow-steps-grid">
+            <div class="workflow-step-item">
+                <div class="step-num">01</div>
+                <div class="step-content">
+                    <div class="step-title">Ingest Repository</div>
+                    <div class="step-desc">Extract README facts and inspect demo with headless browser.</div>
+                </div>
+            </div>
+            <div class="workflow-step-sep">&rarr;</div>
+            <div class="workflow-step-item">
+                <div class="step-num">02</div>
+                <div class="step-content">
+                    <div class="step-title">Isolate Evidence</div>
+                    <div class="step-desc">Classify facts, tech stack, and cautions to eliminate assumptions.</div>
+                </div>
+            </div>
+            <div class="workflow-step-sep">&rarr;</div>
+            <div class="workflow-step-item">
+                <div class="step-num">03</div>
+                <div class="step-content">
+                    <div class="step-title">Compose & Edit</div>
+                    <div class="step-desc">Interactive review with real-time LinkedIn feed simulation.</div>
+                </div>
+            </div>
+            <div class="workflow-step-sep">&rarr;</div>
+            <div class="workflow-step-item">
+                <div class="step-num">04</div>
+                <div class="step-content">
+                    <div class="step-title">Official Publish</div>
+                    <div class="step-desc">One-click authenticated LinkedIn release with media upload.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status & Environment Pulse Row -->
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2 class="card-title">Integration & Environment Status</h2>
+            <div class="card-title-group">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+                <h2 class="card-title">Integration & Environment Status</h2>
+            </div>
+            <span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                <span class="pulse-indicator"></span>
+                <span>Active & Protected</span>
+            </span>
         </div>
         <div class="status-metrics-grid">
             <div class="status-metric-item">
-                <span style="color: var(--text-muted);">Current AI Mode:</span>
+                <span class="status-label">Current AI Mode:</span>
                 <span id="dash-ai-mode" class="badge badge-info">Cloud API</span>
             </div>
             <div class="status-metric-item">
-                <span style="color: var(--text-muted);">GitHub Connection:</span>
+                <span class="status-label">GitHub Connection:</span>
                 <span id="dash-github-status" class="badge badge-neutral">Public (Unauth)</span>
             </div>
             <div class="status-metric-item">
-                <span style="color: var(--text-muted);">LinkedIn OAuth:</span>
+                <span class="status-label">LinkedIn OAuth:</span>
                 <span id="dash-linkedin-status" class="badge badge-neutral">Not Connected</span>
             </div>
             <div class="status-metric-item">
-                <span style="color: var(--text-muted);">Local Server:</span>
-                <span class="badge badge-success">127.0.0.1:8000</span>
+                <span class="status-label">Localhost Binding:</span>
+                <span class="badge badge-success font-mono">127.0.0.1:8000</span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- TAB B: PROJECTS -->
-<div id="tab-projects" class="tab-panel">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">Analyze New Repository</h2>
+<!-- =========================================================================
+     TAB 2: PROJECTS (Repository Ingestion & Management)
+     ========================================================================= -->
+<div id="tab-projects" class="tab-panel" role="tabpanel" aria-labelledby="tab-projects-heading">
+    <div class="projects-studio-layout">
+        <!-- Left Column: Repository Intake Form -->
+        <div class="projects-intake-pane">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                        <h2 class="card-title">Analyze Repository</h2>
+                    </div>
+                    <span class="badge badge-neutral">GitHub Official REST</span>
+                </div>
+                <div class="card-body">
+                    <form id="form-analyze-project" onsubmit="handleAnalyzeSubmit(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="project-repo-url">
+                                <span>GitHub Repository URL</span>
+                                <span class="req-indicator">*</span>
+                            </label>
+                            <div class="input-with-icon">
+                                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                <input type="url" id="project-repo-url" class="form-control font-mono" placeholder="https://github.com/owner/repository" required>
+                            </div>
+                            <span class="form-hint">Fetches README facts, tech stack, and commits</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="project-demo-url">
+                                <span>Working Demo URL</span>
+                                <span class="opt-indicator">(Optional)</span>
+                            </label>
+                            <div class="input-with-icon">
+                                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                </svg>
+                                <input type="url" id="project-demo-url" class="form-control font-mono" placeholder="https://demo.example.com">
+                            </div>
+                            <span class="form-hint">Inspects UI with headless browser sandbox</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="project-user-notes">
+                                <span>Context & Personal Notes</span>
+                                <span class="opt-indicator">(Optional)</span>
+                            </label>
+                            <textarea id="project-user-notes" class="form-textarea" style="min-height: 85px;" placeholder="Key highlights, challenges solved, or performance benchmarks..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="project-post-style">Post Style Angle</label>
+                            <select id="project-post-style" class="form-select">
+                                <option value="professional">Professional & Technical Impact (Architecture)</option>
+                                <option value="developer">Developer-Focused Deep Dive (Stack & challenges)</option>
+                                <option value="showcase">Product & Project Showcase (Features & benefits)</option>
+                                <option value="learning">Learning Journey & Behind-the-Scenes</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="custom-toggle-label">
+                                <input type="checkbox" id="project-web-research" class="custom-toggle-input">
+                                <span class="custom-toggle-slider"></span>
+                                <span class="toggle-text-wrap">
+                                    <span class="toggle-text-title">Live Web Research</span>
+                                    <span class="toggle-text-desc">Enriches facts with external documentation</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <button type="submit" id="btn-start-analysis" class="btn btn-primary btn-block">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <span>Start Analysis & Ingestion</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-        <form id="form-analyze-project" onsubmit="handleAnalyzeSubmit(event)">
-            <div class="form-grid-2col">
-                <div class="form-group">
-                    <label class="form-label" for="project-repo-url">GitHub Repository URL *</label>
-                    <input type="url" id="project-repo-url" class="form-control" placeholder="https://github.com/owner/repository" required>
-                    <span class="form-hint">Reads README.md and repository metadata via GitHub official REST API</span>
+
+        <!-- Right Column: Analyzed Repositories Table -->
+        <div class="projects-list-pane">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                        <h2 class="card-title">Analyzed Projects</h2>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="loadProjectsList()" aria-label="Refresh Projects List">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="project-demo-url">Working Demo URL (Optional)</label>
-                    <input type="url" id="project-demo-url" class="form-control" placeholder="https://demo.example.com">
-                    <span class="form-hint">Controlled headless browser inspection with SSRF defenses</span>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Project Name</th>
+                                <th scope="col">Repository URL</th>
+                                <th scope="col">Demo Link</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-table-body">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">Loading analyzed projects...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label class="form-label" for="project-user-notes">Context, Key Highlights or Personal Notes (Optional)</label>
-                <textarea id="project-user-notes" class="form-textarea" placeholder="E.g., Built this over the weekend to solve X, learned Y about concurrency..."></textarea>
-            </div>
-
-            <div class="form-grid-2col">
-                <div class="form-group">
-                    <label class="form-label" for="project-post-style">Post Style</label>
-                    <select id="project-post-style" class="form-select">
-                        <option value="professional">Professional & Technical Impact</option>
-                        <option value="developer">Developer-Focused Deep Dive</option>
-                        <option value="showcase">Product & Project Showcase</option>
-                        <option value="learning">Learning Journey & Behind-the-Scenes</option>
-                    </select>
-                </div>
-                <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
-                    <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; margin-top: 0.5rem;">
-                        <input type="checkbox" id="project-web-research" style="accent-color: var(--accent-primary); width: 17px; height: 17px;">
-                        <span style="font-size: 0.9rem; color: var(--text-primary); font-weight: 500;">Enable Live Web Research (Optional)</span>
-                    </label>
-                    <span class="form-hint">Enriches facts with verified external documentation if configured</span>
-                </div>
-            </div>
-
-            <div class="form-actions-row">
-                <button type="submit" id="btn-start-analysis" class="btn btn-primary">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                    <span>Start Analysis & Evidence Extraction</span>
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Projects Table -->
-    <div class="card" style="margin-top: 2rem;">
-        <div class="card-header">
-            <h2 class="card-title">Analyzed Projects</h2>
-            <button class="btn btn-secondary btn-sm" onclick="loadProjectsList()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                <span>Refresh</span>
-            </button>
-        </div>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Project Name</th>
-                        <th>Repository URL</th>
-                        <th>Demo Link</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="projects-table-body">
-                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading projects...</td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 </div>
 
-<!-- TAB C: PROJECT ANALYSIS -->
-<div id="tab-analysis" class="tab-panel">
+<!-- =========================================================================
+     TAB 3: EVIDENCE & ANALYSIS
+     ========================================================================= -->
+<div id="tab-analysis" class="tab-panel" role="tabpanel" aria-labelledby="tab-analysis-heading">
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title" id="analysis-view-title">Project Evidence & Analysis Report</h2>
+            <div class="card-title-group">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <circle cx="12" cy="14" r="3"></circle>
+                    <line x1="12" y1="2" x2="12" y2="8"></line>
+                </svg>
+                <h2 class="card-title" id="analysis-view-title">Project Evidence & Analysis Report</h2>
+            </div>
             <span id="analysis-status-badge" class="badge badge-neutral">No Project Selected</span>
         </div>
-        <div id="analysis-empty-state" style="text-align: center; color: var(--text-muted); padding: 3rem;">
-            Select a project from the Projects tab or start an analysis to inspect its evidence breakdown.
+
+        <div id="analysis-empty-state" class="empty-state-box">
+            <div class="empty-state-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    <path d="M11 8v6M8 11h6"></path>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">Repository Evidence & Truth Engine</h3>
+            <p class="empty-state-desc">
+                Local-first inspection engine that analyzes GitHub documentation, executes controlled headless browser navigation, and isolates ground-truth evidence to eliminate AI hallucinations.
+            </p>
+            <div class="form-actions-row" style="margin-bottom: 2rem;">
+                <button type="button" class="btn btn-primary" onclick="switchToTab('projects'); setTimeout(() => { const el = document.getElementById('repo-url'); if (el) el.focus(); }, 150);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Analyze GitHub Repository</span>
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="switchToTab('projects')">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>Browse Ingested Projects</span>
+                </button>
+            </div>
+
+            <!-- Architectural Blueprint Preview Pillars -->
+            <div class="empty-preview-pillars-grid">
+                <div class="empty-pillar-card">
+                    <div class="empty-pillar-header">
+                        <span class="quadrant-dot" style="background: var(--accent-indigo);"></span>
+                        <span>Documented Facts</span>
+                    </div>
+                    <div class="empty-pillar-desc">
+                        Deep AST extraction of README architectural claims, installation workflows, and key capabilities.
+                    </div>
+                </div>
+
+                <div class="empty-pillar-card">
+                    <div class="empty-pillar-header">
+                        <span class="quadrant-dot" style="background: var(--accent-cyan);"></span>
+                        <span>Headless Demo Findings</span>
+                    </div>
+                    <div class="empty-pillar-desc">
+                        Controlled Playwright sandbox inspecting live demo viewports, DOM responsiveness, and visual captures.
+                    </div>
+                </div>
+
+                <div class="empty-pillar-card">
+                    <div class="empty-pillar-header">
+                        <span class="quadrant-dot" style="background: var(--accent-emerald);"></span>
+                        <span>Verified Tech Stack</span>
+                    </div>
+                    <div class="empty-pillar-desc">
+                        Automated fingerprinting of runtime frameworks, databases, and dependencies with zero guesswork.
+                    </div>
+                </div>
+
+                <div class="empty-pillar-card">
+                    <div class="empty-pillar-header">
+                        <span class="quadrant-dot" style="background: var(--accent-rose);"></span>
+                        <span>Hallucination Guard</span>
+                    </div>
+                    <div class="empty-pillar-desc">
+                        Strict quarantining of unverified claims to ensure published LinkedIn posts remain 100% truthful.
+                    </div>
+                </div>
+            </div>
         </div>
+
         <div id="analysis-content" style="display: none;">
-            <div class="form-grid-2col">
-                <div>
-                    <h3 style="font-size: 0.95rem; color: var(--accent-primary); margin-bottom: 0.75rem; font-weight: 600;">Documented README Facts</h3>
-                    <div id="analysis-readme-summary" class="evidence-panel" style="max-height: 250px;"></div>
+            <!-- Evidence Quadrants Grid -->
+            <div class="evidence-quadrants-grid">
+                <!-- Quadrant 1: Documented README Facts -->
+                <div class="evidence-quadrant-card quadrant-indigo">
+                    <div class="quadrant-header">
+                        <div class="quadrant-title-group">
+                            <span class="quadrant-dot"></span>
+                            <h3 class="quadrant-title">Documented README Facts</h3>
+                        </div>
+                        <span class="quadrant-badge">Primary Source</span>
+                    </div>
+                    <div id="analysis-readme-summary" class="evidence-panel"></div>
                 </div>
-                <div>
-                    <h3 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 0.75rem; font-weight: 600;">Observed Demo Findings</h3>
-                    <div id="analysis-demo-summary" class="evidence-panel" style="max-height: 250px;"></div>
+
+                <!-- Quadrant 2: Observed Demo Findings -->
+                <div class="evidence-quadrant-card quadrant-cyan">
+                    <div class="quadrant-header">
+                        <div class="quadrant-title-group">
+                            <span class="quadrant-dot"></span>
+                            <h3 class="quadrant-title">Observed Demo Findings</h3>
+                        </div>
+                        <span class="quadrant-badge">Playwright Automated</span>
+                    </div>
+                    <div id="analysis-demo-summary" class="evidence-panel"></div>
+                </div>
+
+                <!-- Quadrant 3: Verified Technologies -->
+                <div class="evidence-quadrant-card quadrant-emerald">
+                    <div class="quadrant-header">
+                        <div class="quadrant-title-group">
+                            <span class="quadrant-dot"></span>
+                            <h3 class="quadrant-title">Verified Technologies & Features</h3>
+                        </div>
+                        <span class="quadrant-badge">Validated Claims</span>
+                    </div>
+                    <div id="analysis-tech-summary" class="evidence-panel"></div>
+                </div>
+
+                <!-- Quadrant 4: Unverified Claims & Cautions -->
+                <div class="evidence-quadrant-card quadrant-rose">
+                    <div class="quadrant-header">
+                        <div class="quadrant-title-group">
+                            <span class="quadrant-dot"></span>
+                            <h3 class="quadrant-title">Unverified Claims & Cautions</h3>
+                        </div>
+                        <span class="quadrant-badge">Hallucination Guard</span>
+                    </div>
+                    <div id="analysis-cautions-summary" class="evidence-panel"></div>
                 </div>
             </div>
 
-            <div class="form-grid-2col" style="margin-top: 1.5rem;">
-                <div>
-                    <h3 style="font-size: 0.95rem; color: var(--accent-emerald); margin-bottom: 0.75rem; font-weight: 600;">Verified Technologies & Features</h3>
-                    <div id="analysis-tech-summary" class="card" style="background: var(--bg-surface-recessed); padding: 1rem;"></div>
-                </div>
-                <div>
-                    <h3 style="font-size: 0.95rem; color: var(--accent-rose); margin-bottom: 0.75rem; font-weight: 600;">Unverified Claims & Cautions</h3>
-                    <div id="analysis-cautions-summary" class="card" style="background: var(--bg-surface-recessed); padding: 1rem;"></div>
+            <!-- Simulated Browser Frame for Demo Screenshot -->
+            <div style="margin-top: 1.75rem;" id="analysis-screenshot-container">
+                <div class="browser-frame">
+                    <div class="browser-frame-header">
+                        <div class="browser-dots">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                        <div class="browser-address-bar">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <span id="browser-url-text" class="font-mono">https://demo.project.local (Controlled Playwright Viewport)</span>
+                        </div>
+                        <div class="browser-meta">1280 &times; 800 HD</div>
+                    </div>
+                    <div id="analysis-screenshot" class="browser-frame-viewport"></div>
                 </div>
             </div>
 
-            <div style="margin-top: 1.5rem;" id="analysis-screenshot-container">
-                <h3 style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 0.75rem; font-weight: 600;">Demo Screenshot</h3>
-                <div id="analysis-screenshot" style="border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border-subtle); max-width: 600px; width: 100%;"></div>
-            </div>
-
-            <div class="form-actions-row" style="margin-top: 1.5rem;">
-                <button class="btn btn-primary" onclick="generateDraftFromCurrentProject()">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+            <!-- Action Controls -->
+            <div class="form-actions-row" style="margin-top: 1.75rem;">
+                <button class="btn btn-primary btn-lg" onclick="generateDraftFromCurrentProject()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                    </svg>
                     <span>Generate LinkedIn Post Draft</span>
                 </button>
-                <button class="btn btn-secondary" onclick="switchToTab('editor')">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <button class="btn btn-secondary btn-lg" onclick="switchToTab('editor')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
                     <span>Open in Post Editor</span>
                 </button>
             </div>
@@ -191,359 +490,525 @@
     </div>
 </div>
 
-<!-- TAB D: AI SETTINGS -->
-<div id="tab-ai-settings" class="tab-panel">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">AI Provider & Inference Mode</h2>
-            <span class="badge badge-warning">Mutually Exclusive Modes</span>
-        </div>
+<!-- =========================================================================
+     TAB 4: AI SETTINGS (Model & Inference Engine)
+     ========================================================================= -->
+<div id="tab-ai-settings" class="tab-panel" role="tabpanel" aria-labelledby="tab-ai-settings-heading">
+    <div class="settings-studio-layout">
+        <!-- Left Column: Mode Selection & Engine Architecture -->
+        <div class="settings-side-pane">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                            <rect x="9" y="9" width="6" height="6"></rect>
+                        </svg>
+                        <h2 class="card-title">Inference Engine</h2>
+                    </div>
+                    <span class="badge badge-warning">Mutually Exclusive</span>
+                </div>
+                <div class="card-body">
+                    <p class="section-desc" style="margin-bottom: 1.25rem;">
+                        Select your active AI generation engine. Exactly one inference mode is active at any time with <strong>zero silent fallbacks</strong> between cloud and local inference.
+                    </p>
 
-        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-            Select your active AI engine. Exactly one inference mode is active at any time. The system will never silently fall back between cloud and local inference.
-        </p>
+                    <!-- Exclusive Mode Selection Cards -->
+                    <div class="radio-cards radio-cards-vertical">
+                        <label id="card-mode-cloud" class="radio-card active">
+                            <input type="radio" name="ai_mode" id="ai-mode-cloud" value="cloud" checked>
+                            <div class="radio-card-content">
+                                <div class="radio-card-header">
+                                    <span class="radio-card-title">Cloud AI API</span>
+                                    <span class="badge badge-info badge-sm">Remote API</span>
+                                </div>
+                                <div class="radio-card-desc">
+                                    Connect to OpenAI, Google Gemini, Anthropic Claude, OpenRouter, or custom OpenAI-compatible endpoints via official REST APIs.
+                                </div>
+                            </div>
+                        </label>
+                        <label id="card-mode-local" class="radio-card">
+                            <input type="radio" name="ai_mode" id="ai-mode-local" value="local">
+                            <div class="radio-card-content">
+                                <div class="radio-card-header">
+                                    <span class="radio-card-title">Local GGUF LLM</span>
+                                    <span class="badge badge-success badge-sm">100% Offline</span>
+                                </div>
+                                <div class="radio-card-desc">
+                                    100% private, on-device inference using GGUF quantized models executed on your hardware via llama-cpp-python.
+                                </div>
+                            </div>
+                        </label>
+                    </div>
 
-        <!-- Exclusive Selector -->
-        <div class="radio-cards">
-            <label id="card-mode-cloud" class="radio-card active">
-                <input type="radio" name="ai_mode" id="ai-mode-cloud" value="cloud" checked>
-                <div>
-                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Cloud AI API</div>
-                    <div style="font-size: 0.82rem; color: var(--text-muted);">
-                        Connect to OpenAI, Google Gemini, Anthropic, or compatible cloud LLM providers via API.
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-surface-recessed); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.8rem; color: #0F172A; margin-bottom: 0.35rem;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="label-primary" aria-hidden="true">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <span>Security & Isolation</span>
+                        </div>
+                        <div style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.45;">
+                            All secret keys and credentials are encrypted using Windows Credential Manager (DPAPI). Never stored in plaintext SQLite databases, environment dumps, or client storage.
+                        </div>
                     </div>
                 </div>
-            </label>
-            <label id="card-mode-local" class="radio-card">
-                <input type="radio" name="ai_mode" id="ai-mode-local" value="local">
-                <div>
-                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Local GGUF LLM</div>
-                    <div style="font-size: 0.82rem; color: var(--text-muted);">
-                        100% private, on-device inference using GGUF quantized models via llama-cpp-python.
-                    </div>
-                </div>
-            </label>
-        </div>
-
-        <!-- Cloud Configuration Subpanel -->
-        <div id="ai-config-cloud">
-            <h3 style="font-size: 0.95rem; color: var(--accent-primary); margin-bottom: 1rem; font-weight: 600;">Cloud Provider Settings</h3>
-            <div class="form-grid-2col">
-                <div class="form-group">
-                    <label class="form-label" for="cloud-provider-select">Provider</label>
-                    <select id="cloud-provider-select" class="form-select" onchange="handleCloudProviderChange()">
-                        <option value="openrouter">OpenRouter (Any Model: OpenAI, Claude, Llama, DeepSeek, Mistral)</option>
-                        <option value="openai">OpenAI (GPT-4o, GPT-4o-mini)</option>
-                        <option value="gemini">Google Gemini (Gemini 1.5 Flash / Pro)</option>
-                        <option value="anthropic">Anthropic (Claude 3.5 Sonnet / Haiku)</option>
-                        <option value="custom_openai">Custom OpenAI-Compatible API</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="cloud-model-input">Model Name</label>
-                    <input type="text" id="cloud-model-input" class="form-control" value="openai/gpt-4o-mini">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="cloud-base-url-input">API Base URL (Optional / Custom)</label>
-                <input type="url" id="cloud-base-url-input" class="form-control" placeholder="https://openrouter.ai/api/v1">
-                <div id="custom-provider-presets" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-                    <span style="font-size: 0.78rem; color: var(--text-muted);">Quick Presets:</span>
-                    <span class="preset-pill" onclick="applyCloudPreset('openrouter')">OpenRouter</span>
-                    <span class="preset-pill" onclick="applyCloudPreset('nvidia')">Nvidia NIM</span>
-                    <span class="preset-pill" onclick="applyCloudPreset('groq')">Groq</span>
-                    <span class="preset-pill" onclick="applyCloudPreset('together')">Together</span>
-                    <span class="preset-pill" onclick="applyCloudPreset('ollama')">Local Ollama</span>
-                </div>
-            </div>
-
-            <div class="form-grid-key-timeout">
-                <div class="form-group">
-                    <label class="form-label" for="cloud-api-key-input">API Key <span id="cloud-key-status" style="font-weight: normal; color: var(--accent-cyan);"></span></label>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <input type="password" id="cloud-api-key-input" class="form-control" placeholder="Enter API key for Windows Credential Manager">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="togglePasswordVisibility('cloud-api-key-input')" title="Show / Hide Key">👁️</button>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="clearCloudApiKey()" title="Remove saved key">Clear</button>
-                    </div>
-                    <span class="form-hint">Stored strictly in Windows Credential Manager. Never saved in plaintext SQLite, files, or browser storage.</span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="cloud-timeout-input">Timeout (Seconds)</label>
-                    <input type="number" id="cloud-timeout-input" class="form-control" value="120" min="15" max="300">
-                    <span class="form-hint">Prevents 45s timeout drops on complex models</span>
-                </div>
-            </div>
-
-            <div class="form-actions-row" style="margin-top: 1.25rem;">
-                <button type="button" id="btn-save-cloud" class="btn btn-primary" onclick="saveCloudAiSettings()">Save Settings</button>
-                <button type="button" id="btn-test-cloud" class="btn btn-secondary" onclick="testCloudAiConnection()">Test Connection</button>
             </div>
         </div>
 
-        <!-- Local Configuration Subpanel -->
-        <div id="ai-config-local" style="display: none;">
-            <h3 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 1rem; font-weight: 600;">Local GGUF Model Settings</h3>
-            
-            <div class="alert alert-warning">
-                <span>⚠️ Local GGUF models require significant RAM and compute resources. Ensure your system meets the requirements of the selected model.</span>
-            </div>
+        <!-- Right Column: Active Provider Configuration -->
+        <div class="settings-main-pane">
+            <div class="card">
+                <!-- Cloud Configuration Subpanel -->
+                <div id="ai-config-cloud" class="ai-config-block">
+                    <div class="subpanel-header">
+                        <div class="card-title-group">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="label-primary" aria-hidden="true">
+                                <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                            </svg>
+                            <h3 class="subpanel-title">Cloud Provider Configuration</h3>
+                        </div>
+                        <span class="subpanel-tag">AES-256 Windows Credential Manager Protected</span>
+                    </div>
+                    <div class="form-grid-2col">
+                        <div class="form-group">
+                            <label class="form-label" for="cloud-provider-select">Cloud Provider</label>
+                            <select id="cloud-provider-select" class="form-select" onchange="handleCloudProviderChange()">
+                                <option value="openrouter">OpenRouter (Any Model: OpenAI, Claude, Llama, DeepSeek, Mistral)</option>
+                                <option value="openai">OpenAI (GPT-4o, GPT-4o-mini)</option>
+                                <option value="gemini">Google Gemini (Gemini 1.5 Flash / Pro)</option>
+                                <option value="anthropic">Anthropic (Claude 3.5 Sonnet / Haiku)</option>
+                                <option value="custom_openai">Custom OpenAI-Compatible API</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cloud-model-input">Model Name / Identifier</label>
+                            <input type="text" id="cloud-model-input" class="form-control font-mono" value="openai/gpt-4o-mini">
+                        </div>
+                    </div>
 
-            <div class="form-group">
-                <label class="form-label" for="local-model-path">GGUF Model File Path *</label>
-                <input type="text" id="local-model-path" class="form-control" placeholder="C:\Models\Meta-Llama-3-8B-Instruct.Q4_K_M.gguf">
-                <span class="form-hint">Specify an absolute path to a valid .gguf model file on your local disk.</span>
-            </div>
+                    <div class="form-group">
+                        <label class="form-label" for="cloud-base-url-input">
+                            <span>API Base URL</span>
+                            <span class="opt-indicator">(Optional / Custom Proxy)</span>
+                        </label>
+                        <input type="url" id="cloud-base-url-input" class="form-control font-mono" placeholder="https://openrouter.ai/api/v1">
+                        <div id="custom-provider-presets" class="presets-row">
+                            <span class="presets-label">Quick Endpoints:</span>
+                            <button type="button" class="preset-pill" onclick="applyCloudPreset('openrouter')">OpenRouter</button>
+                            <button type="button" class="preset-pill" onclick="applyCloudPreset('nvidia')">Nvidia NIM</button>
+                            <button type="button" class="preset-pill" onclick="applyCloudPreset('groq')">Groq</button>
+                            <button type="button" class="preset-pill" onclick="applyCloudPreset('together')">Together AI</button>
+                            <button type="button" class="preset-pill" onclick="applyCloudPreset('ollama')">Local Ollama</button>
+                        </div>
+                    </div>
 
-            <div class="form-grid-2col">
-                <div class="form-group">
-                    <label class="form-label" for="local-context-length">Context Length (Tokens)</label>
-                    <input type="number" id="local-context-length" class="form-control" value="4096" min="1024" max="32768">
+                    <div class="form-grid-key-timeout">
+                        <div class="form-group">
+                            <label class="form-label" for="cloud-api-key-input">
+                                <span>API Key</span>
+                                <span id="cloud-key-status" class="key-status-indicator"></span>
+                            </label>
+                            <div class="input-action-group">
+                                <input type="password" id="cloud-api-key-input" class="form-control font-mono" placeholder="Enter API key for Windows Credential Manager">
+                                <button type="button" class="btn btn-secondary btn-icon" onclick="togglePasswordVisibility('cloud-api-key-input')" title="Show / Hide Key" aria-label="Toggle password visibility">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="clearCloudApiKey()" title="Remove saved key">Clear</button>
+                            </div>
+                            <span class="form-hint">Stored strictly in Windows Credential Manager via Keyring. Never written to SQLite, logs, or localStorage.</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cloud-timeout-input">Request Timeout (Seconds)</label>
+                            <input type="number" id="cloud-timeout-input" class="form-control font-mono" value="120" min="15" max="300">
+                            <span class="form-hint">Prevents connection drops on complex reasoning models</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions-row" style="margin-top: 1.5rem;">
+                        <button type="button" id="btn-save-cloud" class="btn btn-primary" onclick="saveCloudAiSettings()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            <span>Save Settings</span>
+                        </button>
+                        <button type="button" id="btn-test-cloud" class="btn btn-secondary" onclick="testCloudAiConnection()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                            <span>Test Connection</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="local-gpu-layers">GPU Offload Layers (n_gpu_layers)</label>
-                    <input type="number" id="local-gpu-layers" class="form-control" value="0" min="0" max="100">
-                </div>
-            </div>
 
-            <div class="form-actions-row" style="margin-top: 1.25rem;">
-                <button type="button" class="btn btn-primary" onclick="saveLocalAiSettings()">Save & Validate Path</button>
-                <button type="button" class="btn btn-secondary" onclick="testLocalModelLoad()">Test Model Loading</button>
+                <!-- Local Configuration Subpanel -->
+                <div id="ai-config-local" class="ai-config-block" style="display: none;">
+                    <div class="subpanel-header">
+                        <div class="card-title-group">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="label-success" aria-hidden="true">
+                                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                            </svg>
+                            <h3 class="subpanel-title" style="color: var(--accent-cyan);">Local GGUF Quantized Model Settings</h3>
+                        </div>
+                        <span class="subpanel-tag">llama-cpp-python CPU Engine</span>
+                    </div>
+
+                    <div class="alert alert-warning" style="margin-bottom: 1.25rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span>Local GGUF models run on-device. Ensure your system has sufficient RAM for the selected quantization level (e.g., 8B Q4_K_M requires ~6 GB RAM).</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="local-model-path">
+                            <span>GGUF Model File Path</span>
+                            <span class="req-indicator">*</span>
+                        </label>
+                        <input type="text" id="local-model-path" class="form-control font-mono" placeholder="C:\Models\Meta-Llama-3-8B-Instruct.Q4_K_M.gguf">
+                        <span class="form-hint">Specify an absolute local disk path to a valid .gguf binary file.</span>
+                    </div>
+
+                    <div class="form-grid-2col">
+                        <div class="form-group">
+                            <label class="form-label" for="local-context-length">Context Window Length (Tokens)</label>
+                            <input type="number" id="local-context-length" class="form-control font-mono" value="4096" min="1024" max="32768">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="local-gpu-layers">GPU Offload Layers (n_gpu_layers)</label>
+                            <input type="number" id="local-gpu-layers" class="form-control font-mono" value="0" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <div class="form-actions-row" style="margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-primary" onclick="saveLocalAiSettings()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            <span>Save & Validate Path</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="testLocalModelLoad()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <span>Test Model Loading</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- TAB E: GENERATION SETTINGS -->
-<div id="tab-gen-settings" class="tab-panel">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">LinkedIn Post Generation Preferences</h2>
+<!-- =========================================================================
+     TAB 5: GENERATION SETTINGS (Writing Preferences)
+     ========================================================================= -->
+<div id="tab-gen-settings" class="tab-panel" role="tabpanel" aria-labelledby="tab-gen-settings-heading">
+    <form id="form-gen-preferences" onsubmit="saveGenPreferences(event)">
+        <div class="gen-prefs-layout">
+            <!-- Left Column: Editorial Voice & Audience Persona -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        <h2 class="card-title">Editorial Voice & Tone</h2>
+                    </div>
+                    <span class="badge badge-neutral">Persona Config</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid-2col">
+                        <div class="form-group">
+                            <label class="form-label" for="gen-default-style">Default Writing Style</label>
+                            <select id="gen-default-style" class="form-select">
+                                <option value="professional">Professional & Technical Impact</option>
+                                <option value="developer">Developer-Focused Deep Dive</option>
+                                <option value="showcase">Product & Project Showcase</option>
+                                <option value="learning">Learning Journey & Behind-the-Scenes</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="gen-language">Post Language</label>
+                            <input type="text" id="gen-language" class="form-control" value="English">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="gen-target-audience">Target Professional Audience</label>
+                        <input type="text" id="gen-target-audience" class="form-control" value="Software Engineers, Tech Leads, Engineering Managers, Founders">
+                        <span class="form-hint">Tailors technical depth, nuance, and vocabulary to these personas.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="gen-custom-instructions">Custom Editorial Instructions</label>
+                        <textarea id="gen-custom-instructions" class="form-textarea" style="min-height: 125px;" placeholder="E.g., Emphasize performance benchmarks, maintain a humble but confident tone, highlight architectural decisions, avoid buzzwords..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Formatting Guardrails & Constraints -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                        <h2 class="card-title">Formatting Guardrails & Constraints</h2>
+                    </div>
+                    <span class="badge badge-neutral">Platform Rules</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label" for="gen-max-length">Max Post Character Length</label>
+                        <input type="number" id="gen-max-length" class="form-control font-mono" value="2000" min="500" max="3000">
+                        <span class="form-hint">LinkedIn platform hard limit is 3,000 characters. Optimal engagement is 1,200–2,000.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="gen-hashtag-prefs">Default Hashtag Strategy</label>
+                        <input type="text" id="gen-hashtag-prefs" class="form-control font-mono" value="#Python #SoftwareEngineering #OpenSource #AI #WebDev">
+                        <span class="form-hint">Appended cleanly at the bottom of the generated commentary.</span>
+                    </div>
+
+                    <div class="checkbox-options-row">
+                        <label class="custom-toggle-label">
+                            <input type="checkbox" id="gen-include-links" checked class="custom-toggle-input">
+                            <span class="custom-toggle-slider"></span>
+                            <span class="toggle-text-wrap">
+                                <span class="toggle-text-title">Include GitHub and Demo links in commentary</span>
+                                <span class="toggle-text-desc">Directs readers to repository and live deployment</span>
+                            </span>
+                        </label>
+                        <label class="custom-toggle-label">
+                            <input type="checkbox" id="gen-include-screenshot" checked class="custom-toggle-input">
+                            <span class="custom-toggle-slider"></span>
+                            <span class="toggle-text-wrap">
+                                <span class="toggle-text-title">Attach Demo Screenshot when available</span>
+                                <span class="toggle-text-desc">Automatically selects inspected demo capture</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions-row">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            <span>Save Preferences</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <form id="form-gen-preferences" onsubmit="saveGenPreferences(event)">
-            <div class="form-grid-2col">
-                <div class="form-group">
-                    <label class="form-label" for="gen-default-style">Default Writing Style</label>
-                    <select id="gen-default-style" class="form-select">
-                        <option value="professional">Professional & Technical Impact</option>
-                        <option value="developer">Developer-Focused Deep Dive</option>
-                        <option value="showcase">Product & Project Showcase</option>
-                        <option value="learning">Learning Journey & Behind-the-Scenes</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="gen-language">Post Language</label>
-                    <input type="text" id="gen-language" class="form-control" value="English">
-                </div>
-            </div>
-
-            <div class="form-grid-2col">
-                <div class="form-group">
-                    <label class="form-label" for="gen-target-audience">Target Audience</label>
-                    <input type="text" id="gen-target-audience" class="form-control" value="Software Engineers, Tech Leads, Hiring Managers">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="gen-max-length">Max Post Character Length</label>
-                    <input type="number" id="gen-max-length" class="form-control" value="2000" min="500" max="3000">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="gen-custom-instructions">Custom Writing Instructions</label>
-                <textarea id="gen-custom-instructions" class="form-textarea" placeholder="E.g., Emphasize performance benchmarks, maintain a humble but confident tone, avoid marketing buzzwords..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="gen-hashtag-prefs">Hashtag Preferences</label>
-                <input type="text" id="gen-hashtag-prefs" class="form-control" value="#Python #SoftwareEngineering #OpenSource #AI #WebDev">
-            </div>
-
-            <div class="checkbox-options-row">
-                <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
-                    <input type="checkbox" id="gen-include-links" checked style="accent-color: var(--accent-primary); width: 17px; height: 17px;">
-                    <span style="font-size: 0.9rem; color: var(--text-primary);">Include GitHub and Demo links in post body</span>
-                </label>
-                <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
-                    <input type="checkbox" id="gen-include-screenshot" checked style="accent-color: var(--accent-primary); width: 17px; height: 17px;">
-                    <span style="font-size: 0.9rem; color: var(--text-primary);">Attach Demo Screenshot when available</span>
-                </label>
-            </div>
-
-            <div class="form-actions-row" style="margin-top: 1.5rem;">
-                <button type="submit" class="btn btn-primary">Save Preferences</button>
-            </div>
-        </form>
-    </div>
+    </form>
 </div>
 
-<!-- TAB F: POST EDITOR -->
-<div id="tab-editor" class="tab-panel">
-    <div class="card">
-        <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
-            <div>
-                <h2 class="card-title">LinkedIn Post Draft Editor</h2>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-                    Compose, validate, review live LinkedIn feed appearance, and attach ordered media.
+<!-- =========================================================================
+     TAB 6: POST COMPOSER & LIVE LINKEDIN FEED PREVIEW (Studio Hero)
+     ========================================================================= -->
+<div id="tab-editor" class="tab-panel" role="tabpanel" aria-labelledby="tab-editor-heading">
+    <!-- Hidden compatibility stubs for elements referenced by app.js (removed from visible UI as requested) -->
+    <div style="display: none !important;" aria-hidden="true">
+        <div id="linkedin-live-card"></div>
+        <div id="li-preview-avatar"></div>
+        <div id="li-preview-name"></div>
+        <div id="li-preview-headline"></div>
+        <div id="li-preview-body"></div>
+        <div id="li-preview-media-container"></div>
+        <div id="li-preview-reactions"></div>
+        <button type="button" id="tab-btn-split"></button>
+        <button type="button" id="tab-btn-editor"></button>
+        <button type="button" id="tab-btn-preview"></button>
+    </div>
+
+    <div id="editor-layout-container" class="editor-layout composer-studio-layout">
+        <!-- Left Pane: Post Commentary Editor & Injected Links -->
+        <div id="editor-left-pane" class="composer-main-pane">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        <h2 class="card-title">LinkedIn Post Commentary</h2>
+                    </div>
+                    <div id="char-count" class="char-counter font-mono">0 / 3000 characters</div>
                 </div>
-            </div>
-            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                <div class="editor-view-switcher">
-                    <button type="button" id="tab-btn-split" class="editor-view-tab active" onclick="switchEditorView('split')">🔀 Split View</button>
-                    <button type="button" id="tab-btn-editor" class="editor-view-tab" onclick="switchEditorView('editor')">✍️ Compose</button>
-                    <button type="button" id="tab-btn-preview" class="editor-view-tab" onclick="switchEditorView('preview')">👁️ Live Feed Preview</button>
+                <div class="card-body">
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <textarea id="post-body" class="form-textarea post-composer-textarea" style="min-height: 320px;" placeholder="Generated LinkedIn post draft will appear here..." oninput="handlePostBodyInput()"></textarea>
+                    </div>
+
+                    <!-- Repository & Live Demo URLs -->
+                    <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="post-github-url">
+                                <span>GitHub Repository Link</span>
+                                <span class="label-cyan">(Auto-Selected)</span>
+                            </label>
+                            <div class="input-action-group">
+                                <input type="url" id="post-github-url" class="form-control font-mono input-readonly" readonly placeholder="Auto-populated from project">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="insertRepoLinkIntoDraft()" title="Append link to post body" style="white-space: nowrap;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                    </svg>
+                                    <span>Insert</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="post-demo-url">
+                                <span>Live Demo Link</span>
+                                <span class="opt-indicator">(Optional)</span>
+                            </label>
+                            <input type="url" id="post-demo-url" class="form-control font-mono input-readonly" readonly placeholder="Auto-populated if demo analyzed">
+                        </div>
+                    </div>
+
+                    <!-- Action Controls Toolbar -->
+                    <div class="editor-actions-row">
+                        <button type="button" class="btn btn-secondary" onclick="saveDraftEdits()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            <span>Save Draft</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="regenerateDraft()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            <span>Regenerate</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="validateCurrentDraft()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                <polyline points="9 12 11 14 15 10"></polyline>
+                            </svg>
+                            <span>Validate Draft</span>
+                        </button>
+                    </div>
+
+                    <!-- Validation Warnings Panel -->
+                    <div id="editor-validation-warnings" style="margin-top: 1.25rem; display: none;"></div>
                 </div>
-                <span id="draft-approval-badge" class="badge badge-warning">Draft: GENERATED</span>
             </div>
         </div>
 
-        <div id="editor-layout-container" class="editor-layout">
-            <!-- Left: Editable Draft & Media Sequence -->
-            <div id="editor-left-pane">
-                <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                        <label class="form-label" for="post-body" style="margin: 0;">Post Commentary (LinkedIn Format)</label>
-                        <div id="char-count" class="char-counter" style="margin: 0;">0 / 3000 characters</div>
+        <!-- Right Pane: Launchpad, Media Tray & Supporting Evidence -->
+        <div id="editor-right-pane" class="composer-side-pane">
+            <!-- Publishing Launchpad Card -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        <h2 class="card-title">Publishing Launchpad</h2>
                     </div>
-                    <textarea id="post-body" class="form-textarea" style="min-height: 280px; font-size: 0.95rem; line-height: 1.6;" placeholder="Generated LinkedIn post draft will appear here..." oninput="handlePostBodyInput()"></textarea>
+                    <span id="draft-approval-badge" class="badge badge-warning">Draft: GENERATED</span>
                 </div>
-
-                <div class="form-grid-2col">
-                    <div class="form-group">
-                        <label class="form-label" for="post-github-url">GitHub Repository Link <span style="font-weight: normal; color: var(--accent-cyan);">(Auto-Selected)</span></label>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <input type="url" id="post-github-url" class="form-control" readonly style="background: rgba(0,0,0,0.4); color: var(--accent-cyan);" placeholder="Auto-populated from project">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertRepoLinkIntoDraft()" title="Append link to post body" style="white-space: nowrap;">🔗 Insert</button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="post-demo-url">Live Demo Link <span style="font-weight: normal; color: var(--text-muted);">(Optional)</span></label>
-                        <input type="url" id="post-demo-url" class="form-control" readonly style="background: rgba(0,0,0,0.4);" placeholder="Auto-populated if demo analyzed">
+                <div class="card-body">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">
+                        Approve your draft after reviewing commentary and media. Once approved, the post can be immediately dispatched to your authorized LinkedIn profile.
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button type="button" id="btn-approve-draft" class="btn btn-primary btn-block btn-lg" onclick="approveCurrentDraft()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Approve Post</span>
+                        </button>
+                        <button type="button" id="btn-publish-draft" class="btn btn-success btn-block btn-lg" disabled onclick="publishCurrentDraft()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                            <span>Publish to LinkedIn</span>
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Attached Media Sequence Manager -->
-                <div style="margin-top: 1rem; margin-bottom: 0.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <h3 style="font-size: 0.95rem; color: var(--accent-cyan); margin: 0; font-weight: 600;">Selected Media for Upload</h3>
-                            <span id="attached-media-count-badge" class="badge badge-neutral" style="font-size: 0.72rem;">0 Media</span>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="openMediaSelectorModal()" title="Pick and order from repo assets, screenshots, or videos">
-                                🖼️ Choose / Order Media
-                            </button>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="triggerExternalMediaUpload()" title="Upload a photo or video from disk">
-                                📁 Upload File
-                            </button>
-                        </div>
+            <!-- Attached Media Sequence Manager Card -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="label-primary" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <h2 class="card-title">Media Sequence</h2>
+                    </div>
+                    <span id="attached-media-count-badge" class="badge badge-neutral badge-sm">0 Media</span>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="openMediaSelectorModal()" title="Pick and order from repo assets, screenshots, or videos">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span>Choose Media</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="triggerExternalMediaUpload()" title="Upload a photo or video from disk">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <span>Upload File</span>
+                        </button>
                     </div>
 
-                    <!-- Hidden file input for external photo/video upload -->
+                    <!-- Hidden file input for external media upload -->
                     <input type="file" id="media-file-input" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime" style="display: none;" onchange="handleExternalMediaSelected(this)">
 
                     <!-- Attached Media Container -->
-                    <div id="editor-media-preview" class="media-container-box">
-                        <!-- Populated dynamically by renderDraftMediaPreview() -->
-                    </div>
-                </div>
-
-                <!-- Validation Warnings Panel -->
-                <div id="editor-validation-warnings" style="margin-top: 1rem; display: none;"></div>
-
-                <!-- Action Controls -->
-                <div class="editor-actions-row" style="margin-top: 1.25rem;">
-                    <button type="button" class="btn btn-secondary" onclick="saveDraftEdits()">💾 Save Draft</button>
-                    <button type="button" class="btn btn-secondary" onclick="regenerateDraft()">🔄 Regenerate</button>
-                    <button type="button" class="btn btn-secondary" onclick="validateCurrentDraft()">🛡️ Validate Draft</button>
-                    <button type="button" id="btn-approve-draft" class="btn btn-primary" onclick="approveCurrentDraft()">✅ Approve Post</button>
-                    <button type="button" id="btn-publish-draft" class="btn btn-success" disabled onclick="publishCurrentDraft()">🚀 Publish to LinkedIn</button>
+                    <div id="editor-media-preview" class="media-container-box"></div>
                 </div>
             </div>
 
-            <!-- Right: LinkedIn Live Feed Preview & Supporting Evidence -->
-            <div id="editor-right-pane">
-                <!-- LinkedIn Live Feed Preview Header -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                    <div style="display: flex; align-items: center; gap: 0.4rem;">
-                        <span style="font-size: 1rem;">📱</span>
-                        <h3 style="font-size: 0.95rem; color: #70b5f9; margin: 0; font-weight: 700; letter-spacing: 0.3px;">Live LinkedIn Feed Preview</h3>
+            <!-- Supporting Evidence Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="label-primary" aria-hidden="true">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
+                        <h2 class="card-title">Supporting Evidence</h2>
                     </div>
-                    <span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 10px;">
-                        Interactive Realtime
-                    </span>
+                    <span class="badge badge-neutral badge-sm">Verified Facts</span>
                 </div>
-
-                <!-- The Live LinkedIn Post Card -->
-                <div id="linkedin-live-card" class="linkedin-feed-card">
-                    <!-- Author Bar -->
-                    <div class="li-header">
-                        <div class="li-author-cluster">
-                            <div id="li-preview-avatar" class="li-avatar">
-                                <span>GY</span>
-                            </div>
-                            <div class="li-author-details">
-                                <div class="li-name-row">
-                                    <span id="li-preview-name">GOSAI YASH</span>
-                                    <span class="li-degree-badge">• 1st</span>
-                                </div>
-                                <div id="li-preview-headline" class="li-headline">
-                                    M.Sc.IT (AI/ML) Student at LJ University | Data Science & AI Developer
-                                </div>
-                                <div class="li-timestamp-row">
-                                    <span>Just now</span>
-                                    <span>•</span>
-                                    <span title="Public">🌐</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="color: #94a3b8; font-size: 1.1rem; cursor: pointer; padding: 0 4px;" title="Post options">•••</div>
-                    </div>
-
-                    <!-- Post Body (Live rendered) -->
-                    <div id="li-preview-body" class="li-body">
-                        Start typing or select a draft to see your LinkedIn post come to life in real-time...
-                    </div>
-
-                    <!-- Media Section (Live rendered single photo, multi-image grid/carousel, or video) -->
-                    <div id="li-preview-media-container" class="li-media-wrapper">
-                        <!-- Populated by updateLivePostPreview() -->
-                    </div>
-
-                    <!-- Social Reaction Bar -->
-                    <div class="li-social-stats">
-                        <div class="li-reaction-icons">
-                            <span style="font-size: 0.85rem;">👍👏💡</span>
-                            <span id="li-preview-reactions" style="margin-left: 3px; font-weight: 500;">Yash Gosai and 24 others</span>
-                        </div>
-                        <div style="display: flex; gap: 0.75rem;">
-                            <span>6 comments</span>
-                            <span>•</span>
-                            <span>2 reposts</span>
-                        </div>
-                    </div>
-
-                    <!-- Action Bar -->
-                    <div class="li-action-bar">
-                        <button type="button" class="li-action-btn">
-                            <span>👍</span> <span>Like</span>
-                        </button>
-                        <button type="button" class="li-action-btn">
-                            <span>💬</span> <span>Comment</span>
-                        </button>
-                        <button type="button" class="li-action-btn">
-                            <span>🔁</span> <span>Repost</span>
-                        </button>
-                        <button type="button" class="li-action-btn">
-                            <span>📤</span> <span>Send</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Supporting Evidence Accordion -->
-                <div style="margin-top: 1.5rem;">
-                    <h3 style="font-size: 0.92rem; color: var(--accent-primary); margin-bottom: 0.65rem; font-weight: 600;">Linked Supporting Evidence</h3>
-                    <div id="editor-evidence-list" class="evidence-panel" style="max-height: 280px;">
-                        <div style="color: var(--text-muted); text-align: center; padding: 1.5rem;">
+                <div class="card-body">
+                    <div id="editor-evidence-list" class="evidence-panel" style="max-height: 240px; overflow-y: auto;">
+                        <div style="color: var(--text-muted); text-align: center; padding: 1.5rem; font-size: 0.82rem;">
                             No evidence linked to current draft.
                         </div>
                     </div>
@@ -553,134 +1018,216 @@
     </div>
 </div>
 
-<!-- TAB G: INTEGRATIONS -->
-<div id="tab-integrations" class="tab-panel">
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <!-- GitHub Integration -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">GitHub Integration</h2>
-                <span id="github-auth-badge" class="badge badge-neutral">Public Access</span>
+<!-- =========================================================================
+     TAB 7: INTEGRATIONS (GitHub, LinkedIn OAuth, Search API)
+     ========================================================================= -->
+<div id="tab-integrations" class="tab-panel" role="tabpanel" aria-labelledby="tab-integrations-heading">
+    <div class="integrations-studio-layout">
+        <!-- Left Column: GitHub & Web Search Providers -->
+        <div class="integrations-side-pane">
+            <!-- GitHub Integration -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                        <h2 class="card-title">GitHub Integration</h2>
+                    </div>
+                    <span id="github-auth-badge" class="badge badge-neutral">Public Access</span>
+                </div>
+                <div class="card-body">
+                    <p class="section-desc" style="margin-bottom: 1rem;">
+                        GitHub Public REST API works out-of-the-box unauthenticated (rate limit: 60 req/hr). Add a Personal Access Token (PAT) for private repo access and a 5,000 req/hr limit.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label" for="github-pat-token">GitHub Personal Access Token (Optional)</label>
+                        <div class="input-action-group">
+                            <input type="password" id="github-pat-token" class="form-control font-mono" placeholder="ghp_xxxxxxxxxxxx (stored in Windows Credential Manager)">
+                            <button type="button" class="btn btn-secondary btn-icon" onclick="togglePasswordVisibility('github-pat-token')" title="Show / Hide PAT" aria-label="Toggle PAT visibility">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-actions-row">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="saveGitHubCredentials()">Save Token</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="testGitHubConnection()">Test Connection</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeGitHubCredentials()">Remove</button>
+                    </div>
+                </div>
             </div>
-            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
-                GitHub Public REST API works without authentication (60 req/hr). Add a Personal Access Token (PAT) for private repo support and 5,000 req/hr.
-            </p>
-            <div class="form-group">
-                <label class="form-label" for="github-pat-token">GitHub Personal Access Token (Optional)</label>
-                <input type="password" id="github-pat-token" class="form-control" placeholder="ghp_xxxxxxxxxxxx (stored in Windows Credential Manager)">
-            </div>
-            <div class="form-actions-row">
-                <button type="button" class="btn btn-primary btn-sm" onclick="saveGitHubCredentials()">Save Token</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="testGitHubConnection()">Test Connection</button>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeGitHubCredentials()">Remove</button>
+
+            <!-- Web Search Integration -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <h2 class="card-title">Web Search Provider</h2>
+                    </div>
+                    <span id="search-status-badge" class="badge badge-neutral">Disabled</span>
+                </div>
+                <div class="card-body">
+                    <p class="section-desc" style="margin-bottom: 1rem;">
+                        Enables live online verification during repository analysis to enrich evidence cards with documentation, releases, and articles.
+                    </p>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="search-provider-select">Search Provider</label>
+                        <select id="search-provider-select" class="form-select">
+                            <option value="none">Disabled (No external web queries)</option>
+                            <option value="tavily">Tavily Search API</option>
+                            <option value="serpapi">SerpAPI</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="search-api-key">Search API Key</label>
+                        <input type="password" id="search-api-key" class="form-control font-mono" placeholder="Search API Key (stored in Windows Credential Manager)">
+                    </div>
+                    <div class="form-actions-row" style="margin-top: 1.25rem;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="saveSearchSettings()">Save Search Settings</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- LinkedIn OAuth Integration -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">LinkedIn Official API Authorization</h2>
-                <span id="linkedin-status-badge" class="badge badge-neutral">Not Connected</span>
-            </div>
-            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
-                Connect your LinkedIn profile using official OAuth 2.0. Choose between Native PKCE (recommended for Windows local apps) or Standard Web OAuth.
-            </p>
+        <!-- Right Column: LinkedIn Official API OAuth -->
+        <div class="integrations-main-pane">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                            <rect x="2" y="9" width="4" height="12"></rect>
+                            <circle cx="4" cy="4" r="2"></circle>
+                        </svg>
+                        <h2 class="card-title">LinkedIn Official API Authorization</h2>
+                    </div>
+                    <span id="linkedin-status-badge" class="badge badge-neutral">Not Connected</span>
+                </div>
+                <div class="card-body">
+                    <p class="section-desc">
+                        Connect your LinkedIn profile using official OAuth 2.0. Choose between Native PKCE (recommended for Windows local apps) or Standard Web OAuth.
+                    </p>
 
-            <!-- Important Redirect URI Notice for LinkedIn Developer Portal -->
-            <div class="alert alert-info" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; background: var(--accent-primary-subtle); border-left: 4px solid var(--accent-primary);">
-                <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
-                    📌 Step 1: Register Authorized Redirect URL in LinkedIn Developer Portal
-                </div>
-                <div style="font-size: 0.86rem; line-height: 1.5; color: #e2e8f0;">
-                    To prevent <em>"The redirect_uri does not match the registered value"</em>, this exact URL must be registered in your LinkedIn App:<br>
-                    1. Open the <a href="https://www.linkedin.com/developers/apps" target="_blank" style="color: var(--accent-cyan); text-decoration: underline; font-weight: 600;">LinkedIn Developer Portal</a> &rarr; select your App &rarr; go to the <strong>Auth</strong> tab.<br>
-                    2. Under <strong>OAuth 2.0 settings</strong>, find <strong>Authorized redirect URLs for your app</strong>.<br>
-                    3. Click the <strong>pencil (Edit)</strong> icon, click <strong>+ Add redirect URL</strong>, paste the exact URL below, and click <strong>Update/Save</strong>:
-                </div>
-                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                    <input type="text" id="linkedin-redirect-uri" class="form-control" style="font-family: var(--font-mono); font-size: 0.88rem; background: rgba(0,0,0,0.5); color: var(--accent-cyan); flex: 1; min-width: 260px;" value="http://127.0.0.1:8000/api/integrations/linkedin/callback">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyRedirectUri()">📋 Copy URL</button>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted); flex-wrap: wrap;">
-                    <span>If you registered <code>localhost</code> instead of <code>127.0.0.1</code> in LinkedIn, switch here:</span>
-                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="setRedirectUriMode('127.0.0.1')">127.0.0.1</button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="setRedirectUriMode('localhost')">localhost</button>
-                </div>
-            </div>
+                    <!-- Step 1: Redirect URI Notice -->
+                    <div class="oauth-setup-card">
+                        <div class="oauth-step-title">
+                            <span class="step-badge">1</span>
+                            <span>Register Authorized Redirect URL in LinkedIn Developer Portal</span>
+                        </div>
+                        <div class="oauth-step-instructions">
+                            To prevent <em>"The redirect_uri does not match the registered value"</em>, register this exact URL in your LinkedIn Developer App:<br>
+                            1. Open the <a href="https://www.linkedin.com/developers/apps" target="_blank" class="link-external">LinkedIn Developer Portal &rarr;</a> select your App &rarr; go to the <strong>Auth</strong> tab.<br>
+                            2. Under <strong>OAuth 2.0 settings</strong>, locate <strong>Authorized redirect URLs for your app</strong>.<br>
+                            3. Click <strong>Edit</strong>, click <strong>+ Add redirect URL</strong>, paste the exact URL below, and click <strong>Save</strong>:
+                        </div>
+                        <div class="input-action-group">
+                            <input type="text" id="linkedin-redirect-uri" class="form-control font-mono input-accent" value="http://127.0.0.1:8000/api/integrations/linkedin/callback" readonly>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="copyRedirectUri()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span>Copy URL</span>
+                            </button>
+                        </div>
+                        <div class="oauth-host-switch">
+                            <span>Host variant:</span>
+                            <button type="button" class="btn btn-secondary btn-sm pill-btn" onclick="setRedirectUriMode('127.0.0.1')">127.0.0.1</button>
+                            <button type="button" class="btn btn-secondary btn-sm pill-btn" onclick="setRedirectUriMode('localhost')">localhost</button>
+                        </div>
+                    </div>
 
-            <!-- Flow Mode Selector & Credentials -->
-            <div style="font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);">
-                📌 Step 2: Select Authorization Flow & Credentials
-            </div>
+                    <!-- Step 2: Protocol Selector & Credentials -->
+                    <div style="font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="step-badge">2</span>
+                        <span>Select Authorization Protocol & Credentials</span>
+                    </div>
 
-            <div class="form-grid-2col" style="margin-bottom: 1rem;">
-                <div class="form-group">
-                    <label class="form-label" for="linkedin-flow-type">Authorization Protocol</label>
-                    <select id="linkedin-flow-type" class="form-select" onchange="toggleLinkedInFlowFields()">
-                        <option value="native_pkce" selected>Native OAuth 2.0 with PKCE (No OpenID required, for local apps)</option>
-                        <option value="standard">Standard Web OAuth 2.0 (OpenID + Publishing)</option>
-                    </select>
-                    <span class="form-hint" id="flow-hint">PKCE requests only <code>w_member_social</code>, avoiding the <em>"Open ID permission is not supported for PKCE flows"</em> error.</span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="linkedin-client-id">LinkedIn Client ID *</label>
-                    <input type="text" id="linkedin-client-id" class="form-control" placeholder="E.g. 78xxxxxxxxxxxx">
-                </div>
-            </div>
+                    <div class="form-grid-2col" style="margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="linkedin-flow-type">Authorization Protocol</label>
+                            <select id="linkedin-flow-type" class="form-select" onchange="toggleLinkedInFlowFields()">
+                                <option value="native_pkce" selected>Native OAuth 2.0 with PKCE (No OpenID required, for local apps)</option>
+                                <option value="standard">Standard Web OAuth 2.0 (OpenID + Publishing)</option>
+                            </select>
+                            <span class="form-hint" id="flow-hint">PKCE requests only <code>w_member_social</code>, avoiding the <em>"Open ID permission is not supported for PKCE flows"</em> error.</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="linkedin-client-id">
+                                <span>LinkedIn Client ID</span>
+                                <span class="req-indicator">*</span>
+                            </label>
+                            <input type="text" id="linkedin-client-id" class="form-control font-mono" placeholder="E.g. 78xxxxxxxxxxxx">
+                        </div>
+                    </div>
 
-            <div class="form-grid-2col" style="margin-bottom: 1rem;">
-                <div class="form-group">
-                    <label class="form-label" for="linkedin-client-secret">LinkedIn Primary Client Secret <span id="secret-optional-label" style="font-weight: normal; color: var(--text-muted);">(Optional for PKCE)</span></label>
-                    <input type="password" id="linkedin-client-secret" class="form-control" placeholder="E.g. WPL_AP1.xxxxxxxx (stored in Windows Credential Manager)">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="linkedin-author-urn">Author Person URN / Member ID <span style="font-weight: normal; color: var(--text-muted);">(Optional: e.g. urn:li:person:abcdef)</span></label>
-                    <input type="text" id="linkedin-author-urn" class="form-control" placeholder="Optional author URN for PKCE posting">
-                </div>
-            </div>
+                    <div class="form-grid-2col" style="margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="linkedin-client-secret">
+                                <span>LinkedIn Primary Client Secret</span>
+                                <span id="secret-optional-label" class="opt-indicator">(Optional for PKCE)</span>
+                            </label>
+                            <input type="password" id="linkedin-client-secret" class="form-control font-mono" placeholder="E.g. WPL_AP1.xxxxxxxx (stored in Windows Credential Manager)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="linkedin-author-urn">
+                                <span>Author Person URN / Member ID</span>
+                                <span class="opt-indicator">(Optional: e.g. urn:li:person:abcdef)</span>
+                            </label>
+                            <input type="text" id="linkedin-author-urn" class="form-control font-mono" placeholder="Optional author URN for PKCE posting">
+                        </div>
+                    </div>
 
-            <div class="form-actions-row">
-                <button type="button" class="btn btn-primary btn-sm" onclick="startLinkedInOAuth()">🔗 Authorize LinkedIn Profile</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="saveLinkedInAuthorUrn()">💾 Save Author URN</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="testLinkedInConnection()">Test Status</button>
-                <button type="button" class="btn btn-danger btn-sm" onclick="disconnectLinkedIn()">Revoke / Disconnect</button>
-            </div>
-        </div>
-
-        <!-- Web Search Integration -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Optional Web Search Provider</h2>
-                <span id="search-status-badge" class="badge badge-neutral">Disabled</span>
-            </div>
-            <div class="form-grid-2col">
-                <div class="form-group">
-                    <label class="form-label" for="search-provider-select">Search Provider</label>
-                    <select id="search-provider-select" class="form-select">
-                        <option value="none">Disabled (No external web queries)</option>
-                        <option value="tavily">Tavily Search API</option>
-                        <option value="serpapi">SerpAPI</option>
-                    </select>
+                    <div class="form-actions-row">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="startLinkedInOAuth()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                            <span>Authorize LinkedIn Profile</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="saveLinkedInAuthorUrn()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            <span>Save Author URN</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="testLinkedInConnection()">Test Status</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="disconnectLinkedIn()">Revoke / Disconnect</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="search-api-key">Search API Key</label>
-                    <input type="password" id="search-api-key" class="form-control" placeholder="Search API Key (stored in Windows Credential Manager)">
-                </div>
-            </div>
-            <div class="form-actions-row" style="margin-top: 1rem;">
-                <button type="button" class="btn btn-primary btn-sm" onclick="saveSearchSettings()">Save Search Settings</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- TAB H: HISTORY -->
-<div id="tab-history" class="tab-panel">
+<!-- =========================================================================
+     TAB 8: AUDIT HISTORY (Publishing Log & Verification)
+     ========================================================================= -->
+<div id="tab-history" class="tab-panel" role="tabpanel" aria-labelledby="tab-history-heading">
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">Draft & Publishing History</h2>
-            <button class="btn btn-secondary btn-sm" onclick="loadHistoryList()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+            <div class="card-title-group">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <h2 class="card-title">Draft & Publishing Audit History</h2>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="loadHistoryList()" aria-label="Refresh Audit History">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
                 <span>Refresh History</span>
             </button>
         </div>
@@ -688,107 +1235,154 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Draft ID</th>
-                        <th>Project</th>
-                        <th>AI Mode</th>
-                        <th>State</th>
-                        <th>Timestamp</th>
-                        <th>LinkedIn Post ID</th>
-                        <th>Actions</th>
+                        <th scope="col">Draft ID</th>
+                        <th scope="col">Project</th>
+                        <th scope="col">AI Mode</th>
+                        <th scope="col">State</th>
+                        <th scope="col">Timestamp</th>
+                        <th scope="col">LinkedIn Post ID</th>
+                        <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="history-table-body">
-                    <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading history...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">Loading audit history...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- Modal: Choose from System / Repo Media (Multi-Select & Order) -->
-<div id="media-selector-modal" class="custom-modal-backdrop" style="display: none;" onclick="handleModalBackdropClick(event)">
-    <div class="custom-modal-dialog" style="max-width: 920px; width: 95vw;">
+<!-- =========================================================================
+     MODAL: SELECT & ORDER PROJECT MEDIA
+     ========================================================================= -->
+<div id="media-selector-modal" class="custom-modal-backdrop" style="display: none;" onclick="handleModalBackdropClick(event)" role="dialog" aria-modal="true" aria-labelledby="modal-media-title">
+    <div class="custom-modal-dialog">
         <div class="custom-modal-header">
             <div>
-                <h3 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-weight: 700;">Select & Order Project Media</h3>
-                <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
-                    Click items in the sequence you want them uploaded (e.g. 1st, 2nd, 3rd). Reorder anytime using the sequence bar below.
+                <h3 id="modal-media-title" class="custom-modal-title">Select & Order Project Media</h3>
+                <div class="custom-modal-subtitle">
+                    Click items in the sequence you want them uploaded (1st, 2nd, 3rd...). Reorder anytime using the sequence bar below.
                 </div>
             </div>
-            <button type="button" class="btn-close" onclick="closeMediaSelectorModal()">✕</button>
+            <button type="button" class="btn-close" onclick="closeMediaSelectorModal()" aria-label="Close media selector">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
         </div>
         <div class="custom-modal-body">
-            <!-- Selected Sequence Order Bar -->
+            <!-- Selected Sequence Order Tray -->
             <div id="modal-selection-tray" class="media-sequence-tray" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-cyan); display: flex; align-items: center; gap: 0.35rem;">
-                        <span>📋 Upload Sequence:</span>
-                        <span id="modal-selected-count" style="color: #fff; font-weight: 600;">0 items selected</span>
+                <div class="media-tray-header">
+                    <div class="media-tray-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="label-cyan" aria-hidden="true">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                        <span>Upload Sequence:</span>
+                        <span id="modal-selected-count" class="badge badge-info badge-sm">0 items selected</span>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 2px 8px;" onclick="clearModalMediaSelection()">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="clearModalMediaSelection()">
                         Clear All
                     </button>
                 </div>
-                <div id="modal-sequence-chips" class="media-sequence-list">
-                    <!-- Sequence chips populated dynamically -->
-                </div>
+                <div id="modal-sequence-chips" class="media-sequence-list"></div>
             </div>
 
             <!-- Filter Tabs & Search -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; flex-wrap: wrap; gap: 0.5rem;">
-                <div class="media-filter-row" style="margin: 0;">
+            <div class="modal-controls-bar">
+                <div class="media-filter-row" role="tablist" aria-label="Media Type Filters">
                     <button type="button" class="media-filter-btn active" onclick="filterModalMedia('all', this)">All Media (<span id="filter-count-all">0</span>)</button>
                     <button type="button" class="media-filter-btn" onclick="filterModalMedia('image', this)">Photos & GIFs (<span id="filter-count-image">0</span>)</button>
                     <button type="button" class="media-filter-btn" onclick="filterModalMedia('video', this)">Videos (<span id="filter-count-video">0</span>)</button>
                     <button type="button" class="media-filter-btn" onclick="filterModalMedia('repo', this)">Repo Assets</button>
                     <button type="button" class="media-filter-btn" onclick="filterModalMedia('demo', this)">Demo Screenshots</button>
                 </div>
-                <input type="text" id="modal-media-search" class="form-control" placeholder="Search by name..." style="max-width: 200px; padding: 0.3rem 0.65rem; font-size: 0.8rem;" oninput="handleModalMediaSearch(this.value)">
+                <div class="modal-search-wrap">
+                    <input type="text" id="modal-media-search" class="form-control" placeholder="Search by name..." oninput="handleModalMediaSearch(this.value)">
+                </div>
             </div>
 
             <!-- Multi-Select Batch Actions -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; padding: 0.45rem 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); flex-wrap: wrap; gap: 0.5rem;">
-                <div style="display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllRepoMedia()" style="font-size: 0.75rem; padding: 3px 10px; font-weight: 600;" title="Select all repository media in order">
-                        📦 Select All Repo Media
+            <div class="batch-actions-bar">
+                <div class="batch-buttons-group">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllRepoMedia()" title="Select all repository media in order">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Select All Repo Media</span>
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllVisibleModalMedia()" style="font-size: 0.75rem; padding: 3px 10px;" title="Select all visible items in current view">
-                        ☑️ Select All Visible
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllVisibleModalMedia()" title="Select all visible items in current view">
+                        <span>Select Visible</span>
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="clearModalMediaSelection()" style="font-size: 0.75rem; padding: 3px 10px;" title="Deselect all items">
-                        ◻️ Deselect All
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="clearModalMediaSelection()" title="Deselect all items">
+                        <span>Deselect All</span>
                     </button>
                 </div>
-                <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem;">
-                    <span>💡 Tip: Click cards or checkboxes to multi-select. Order is preserved.</span>
+                <div class="batch-tip">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>Click cards to multi-select. Sequence order is preserved.</span>
                 </div>
             </div>
 
-            <div id="media-modal-loading" style="display: none; text-align: center; padding: 2rem;">
-                <div class="spinner-ring" style="width: 36px; height: 36px; margin: 0 auto 0.75rem auto;"></div>
+            <div id="media-modal-loading" style="display: none; text-align: center; padding: 2.5rem;">
+                <div class="spinner-ring" style="width: 38px; height: 38px; margin: 0 auto 0.75rem auto;"></div>
                 <div style="color: var(--text-muted); font-size: 0.9rem;">Scanning project screenshots, videos, and repository assets...</div>
             </div>
-            <div id="media-modal-empty" style="display: none; text-align: center; padding: 2.5rem 1rem;">
-                <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🖼️</div>
-                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">No Media Found</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+
+            <div id="media-modal-empty" style="display: none; text-align: center; padding: 3rem 1rem;">
+                <div class="empty-state-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </div>
+                <div class="empty-state-title">No Media Found</div>
+                <div class="empty-state-desc">
                     No repository images or demo screenshots were found matching this filter.
                 </div>
                 <button type="button" class="btn btn-primary btn-sm" onclick="closeMediaSelectorModal(); triggerExternalMediaUpload();">
-                    📁 Upload from Computer Instead
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Upload from Computer Instead</span>
                 </button>
             </div>
+
             <div id="media-grid" class="media-gallery-grid"></div>
         </div>
-        <div class="custom-modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-            <div style="font-size: 0.8rem; color: var(--text-muted);">
+
+        <div class="custom-modal-footer">
+            <div class="modal-footer-hint-text">
                 <span id="modal-footer-hint">Click cards to add or remove them from the upload sequence.</span>
             </div>
-            <div style="display: flex; gap: 0.5rem;">
+            <div class="modal-footer-actions">
                 <button type="button" class="btn btn-secondary btn-sm" onclick="closeMediaSelectorModal()">Cancel</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="closeMediaSelectorModal(); triggerExternalMediaUpload();">📁 Upload New</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeMediaSelectorModal(); triggerExternalMediaUpload();">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Upload New</span>
+                </button>
                 <button type="button" id="btn-apply-modal-media" class="btn btn-primary btn-sm" onclick="applyModalMediaSelection()">
-                    ✅ Apply Selection (0)
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Apply Selection (0)</span>
                 </button>
             </div>
         </div>
