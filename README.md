@@ -6,11 +6,12 @@ A modular, local-first Windows application that reads a project's GitHub README,
 
 ## Project Video Showcase
 
-Watch the 20-second launch showcase demonstrating repository analysis, evidence isolation, post drafting, and official LinkedIn publication:
+Watch the launch showcase demonstrating repository analysis, evidence isolation, post drafting, and official LinkedIn publication:
 
-[![Build2Buzz Video Showcase](docs/media/build2buzz_poster.jpg)](docs/media/build2buzz_launch_video.mp4)
+[![Build2Buzz Video Showcase](docs/media/build2buzz_preview.gif)](https://github.com/gosaiyash/Build2Buzz/raw/main/docs/media/build2buzz_launch_video.mp4)
 
-Direct Video Link: [docs/media/build2buzz_launch_video.mp4](docs/media/build2buzz_launch_video.mp4)
+- Direct Video Stream: [Watch MP4 Video (Full HD Stream)](https://github.com/gosaiyash/Build2Buzz/raw/main/docs/media/build2buzz_launch_video.mp4)
+- Repository Media File: [docs/media/build2buzz_launch_video.mp4](docs/media/build2buzz_launch_video.mp4)
 
 ---
 
