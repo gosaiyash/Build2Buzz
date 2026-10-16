@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Build2Buzz - Launch Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #07090e;
+      font-family: 'Inter', -apple-system, sans-serif;
+      color: #f8fafc;
+      -webkit-font-smoothing: antialiased;
+    }
+    #viewport {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      background: radial-gradient(circle at 50% 30%, #151b2e 0%, #07090e 70%, #030407 100%);
+      overflow: hidden;
+    }
+
+    /* Ambient background glows */
+    .glow-sphere {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      opacity: 0.45;
+      transition: transform 0.2s ease-out;
+    }
+    .glow-primary {
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(99, 102, 241, 0) 70%);
+      top: -200px;
+      left: 100px;
+    }
+    .glow-cyan {
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.45) 0%, rgba(6, 182, 212, 0) 70%);
+      bottom: -150px;
+      right: 150px;
+    }
+    .glow-emerald {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0) 70%);
+      top: 300px;
+      right: -100px;
+    }
+
+    /* Grid overlay */
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    /* Top HUD */
+    .top-hud {
+      position: absolute;
+      top: 48px;
+      left: 80px;
+      right: 80px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 50;
+    }
+    .hud-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .hud-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #111726;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+    }
+    .hud-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+    .hud-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      background: rgba(17, 23, 38, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    .hud-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 12px #10b981;
+    }
+
+    /* Scene Containers */
+    .scene {
+      position: absolute;
+      inset: 0;
+      padding: 120px 80px 80px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .scene.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* SCENE 1: The Hook */
+    #scene-1 .hook-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 24px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 9999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      color: #818cf8;
+      margin-bottom: 28px;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+    }
+    #scene-1 .hook-title {
+      font-size: 72px;
+      font-weight: 900;
+      line-height: 1.1;
+      text-align: center;
+      letter-spacing: -0.03em;
+      max-width: 1300px;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #ffffff 30%, #cbd5e1 70%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    #scene-1 .hook-subtitle {
+      font-size: 26px;
+      font-weight: 500;
+      color: #94a3b8;
+      text-align: center;
+      max-width: 900px;
+      margin-bottom: 48px;
+      line-height: 1.5;
+    }
+    #scene-1 .tags-row {
+      display: flex;
+      gap: 18px;
+    }
+    .tag-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 24px;
+      background: rgba(17, 23, 38, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #e2e8f0;
+      backdrop-filter: blur(10px);
+    }
+
+    /* SCENE 2, 3, 4: Showcase Layout */
+    .showcase-layout {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .preview-frame {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #0c101b;
+      box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.15);
+      height: 720px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .preview-frame img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+      object-position: top;
+    }
+    .details-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      width: fit-content;
+    }
+    .badge-indigo {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+    }
+    .badge-cyan {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: #67e8f9;
+    }
+    .badge-emerald {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+    .showcase-title {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+    .showcase-desc {
+      font-size: 19px;
+      line-height: 1.6;
+      color: #94a3b8;
+    }
+    .feature-card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 8px;
+    }
+    .feature-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 18px 20px;
+      background: rgba(17, 23, 38, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+    }
+    .feature-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .icon-indigo { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+    .icon-cyan { background: rgba(6, 182, 212, 0.2); color: #22d3ee; }
+    .icon-emerald { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    
+    .feature-text-head {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 4px;
+    }
+    .feature-text-sub {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    /* SCENE 5: Outro */
+    #scene-5 .outro-logo {
+      width: 110px;
+      height: 110px;
+      border-radius: 28px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 15px 50px rgba(99, 102, 241, 0.4);
+      margin-bottom: 32px;
+    }
+    #scene-5 .outro-punchline {
+      font-size: 78px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      text-align: center;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #ffffff 20%, #a5b4fc 60%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    #scene-5 .outro-sub {
+      font-size: 24px;
+      color: #cbd5e1;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    #scene-5 .outro-link-box {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 36px;
+      background: rgba(17, 23, 38, 0.85);
+      border: 1px solid rgba(99, 102, 241, 0.5);
+      border-radius: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: #818cf8;
+      box-shadow: 0 10px 40px rgba(99, 102, 241, 0.25);
+    }
+
+    /* Bottom progress bar */
+    .progress-track {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      z-index: 60;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6366f1, #06b6d4, #10b981);
+      box-shadow: 0 0 12px #6366f1;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport">
+    <div class="glow-sphere glow-primary" id="glow1"></div>
+    <div class="glow-sphere glow-cyan" id="glow2"></div>
+    <div class="glow-sphere glow-emerald" id="glow3"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- HUD Header -->
+    <header class="top-hud">
+      <div class="hud-brand">
+        <img src="assets/img/logo.png" alt="Build2Buzz Logo" class="hud-logo">
+        <span class="hud-title">Build2Buzz</span>
+      </div>
+      <div class="hud-badge">
+        <span class="hud-dot"></span>
+        <span id="hud-status-text">LOCAL-FIRST &bull; 127.0.0.1:8000</span>
+      </div>
+    </header>
+
+    <!-- SCENE 1: The Hook (0.0s - 3.5s) -->
+    <section class="scene" id="scene-1">
+      <div class="hook-pill">THE VERIFIED AI PUBLISHER</div>
+      <h1 class="hook-title">Turn GitHub Repos Into High-Impact LinkedIn Posts</h1>
+      <p class="hook-subtitle">Without AI hallucinations, leaked credentials, or awkward buzzword spam.</p>
+      <div class="tags-row">
+        <div class="tag-item">
+          <span style="color: #6366f1;">&bull;</span>
+          <span>Official GitHub REST API</span>
+        </div>
+        <div class="tag-item">
+          <span style="color: #06b6d4;">&bull;</span>
+          <span>Playwright Demo Inspection</span>
+        </div>
+        <div class="tag-item">
+          <span style="color: #10b981;">&bull;</span>
+          <span>Human-in-the-Loop Signoff</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 2: Evidence Engine (3.5s - 7.5s) -->
+    <section class="scene" id="scene-2">
+      <div class="showcase-layout">
+        <div class="preview-frame">
+          <img src="assets/img/03_analysis.png" alt="Evidence Analysis Report">
+        </div>
+        <div class="details-panel">
+          <div class="step-badge badge-cyan">BEAT 01 &bull; REPO & DEMO INGESTION</div>
+          <h2 class="showcase-title">The Evidence Engine Isolates Facts from Fiction</h2>
+          <p class="showcase-desc">Automatically ingests README markdown and inspects running web demos with strict SSRF defense. Zero speculative claims without proof.</p>
+          <div class="feature-card-list">
+            <div class="feature-card">
+              <div class="feature-icon-box icon-cyan">01</div>
+              <div>
+                <div class="feature-text-head">Documented README Facts</div>
+                <div class="feature-text-sub">Extracts verified frameworks, dependencies, and license terms.</div>
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon-box icon-cyan">02</div>
+              <div>
+                <div class="feature-text-head">Observed Demo Behavior</div>
+                <div class="feature-text-sub">Playwright headless browser captures live screenshots and visible copy.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 3: Human-in-the-Loop Editor (7.5s - 12.0s) -->
+    <section class="scene" id="scene-3">
+      <div class="showcase-layout">
+        <div class="preview-frame">
+          <img src="assets/img/04_editor.png" alt="Post Editor">
+        </div>
+        <div class="details-panel">
+          <div class="step-badge badge-indigo">BEAT 02 &bull; POST DRAFT & REVIEW</div>
+          <h2 class="showcase-title">Human-in-the-Loop Post Editor</h2>
+          <p class="showcase-desc">Crafts compelling LinkedIn copy tailored to 4 distinct developer styles. Sensitive keys stay locked in Windows Credential Manager.</p>
+          <div class="feature-card-list">
+            <div class="feature-card">
+              <div class="feature-icon-box icon-indigo">03</div>
+              <div>
+                <div class="feature-text-head">Strict Approval Invariant</div>
+                <div class="feature-text-sub">Drafts can never reach LinkedIn without explicit human approval.</div>
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon-box icon-indigo">04</div>
+              <div>
+                <div class="feature-text-head">Cloud & Local GGUF Inference</div>
+                <div class="feature-text-sub">Choose between cloud APIs or completely offline on-device LLMs.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 4: Official LinkedIn Publication (12.0s - 16.0s) -->
+    <section class="scene" id="scene-4">
+      <div class="showcase-layout">
+        <div class="preview-frame">
+          <img src="assets/img/07_history.png" alt="Publishing History">
+        </div>
+        <div class="details-panel">
+          <div class="step-badge badge-emerald">BEAT 03 &bull; VERIFIED PUBLISHING</div>
+          <h2 class="showcase-title">Official LinkedIn REST API Publishing</h2>
+          <p class="showcase-desc">One-click publish directly to your personal LinkedIn profile with official URN tracking, automated rollbacks, and complete audit history.</p>
+          <div class="feature-card-list">
+            <div class="feature-card">
+              <div class="feature-icon-box icon-emerald">05</div>
+              <div>
+                <div class="feature-text-head">Official LinkedIn Share URNs</div>
+                <div class="feature-text-sub">Permanent tracking: urn:li:share:7516478151397675008</div>
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon-box icon-emerald">06</div>
+              <div>
+                <div class="feature-text-head">Zero Silent Fallbacks</div>
+                <div class="feature-text-sub">Secure credentials via keyring with audit logging.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 5: Outro & Punchline (16.0s - 20.0s) -->
+    <section class="scene" id="scene-5">
+      <img src="assets/img/logo.png" alt="Build2Buzz Logo" class="outro-logo">
+      <h2 class="outro-punchline">Build. Showcase. Share.</h2>
+      <p class="outro-sub">Your code deserves an audience that believes the facts.</p>
+      <div class="outro-link-box">
+        <span>github.com/gosaiyash/Build2Buzz</span>
+      </div>
+    </section>
+
+    <!-- Progress Tracker -->
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <audio id="bg-audio" src="assets/music/track.mp3" preload="auto"></audio>
+
+  <script>
+    const DURATION = 20.0;
+    const scenes = [
+      { id: 'scene-1', start: 0.0, end: 3.5 },
+      { id: 'scene-2', start: 3.5, end: 7.5 },
+      { id: 'scene-3', start: 7.5, end: 12.0 },
+      { id: 'scene-4', start: 12.0, end: 16.0 },
+      { id: 'scene-5', start: 16.0, end: 20.0 }
+    ];
+
+    function easeInOutQuad(t) {
+      return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+
+    window.seekTime = function(t) {
+      const clampedT = Math.max(0, Math.min(t, DURATION));
+      
+      // Update progress bar
+      const pct = (clampedT / DURATION) * 100;
+      document.getElementById('progress-fill').style.width = pct + '%';
+
+      // Ambient glow motion
+      const g1 = document.getElementById('glow1');
+      const g2 = document.getElementById('glow2');
+      const g3 = document.getElementById('glow3');
+      if (g1) g1.style.transform = `translate(${Math.sin(clampedT * 0.8) * 80}px, ${Math.cos(clampedT * 0.7) * 50}px)`;
+      if (g2) g2.style.transform = `translate(${Math.cos(clampedT * 0.9) * 70}px, ${Math.sin(clampedT * 0.8) * 60}px)`;
+      if (g3) g3.style.transform = `translate(${Math.sin(clampedT * 1.1) * 60}px, ${Math.sin(clampedT * 0.5) * 40}px)`;
+
+      // Scene transitions
+      scenes.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (!el) return;
+
+        if (clampedT >= s.start && clampedT <= s.end) {
+          el.classList.add('active');
+          const sceneProg = (clampedT - s.start) / (s.end - s.start);
+          
+          // Subtle zoom & float
+          const scale = 1 + (sceneProg * 0.03);
+          const translateY = (1 - Math.min(1, sceneProg * 5)) * 20;
+          el.style.transform = `scale(${scale}) translateY(${translateY}px)`;
+          
+          // Fade in at boundary
+          if (clampedT - s.start < 0.3) {
+            el.style.opacity = (clampedT - s.start) / 0.3;
+          } else if (s.end - clampedT < 0.3) {
+            el.style.opacity = (s.end - clampedT) / 0.3;
+          } else {
+            el.style.opacity = 1;
+          }
+        } else {
+          el.classList.remove('active');
+          el.style.opacity = 0;
+        }
+      });
+    };
+
+    window.playShowcase = function() {
+      let startTime = null;
+      function step(now) {
+        if (!startTime) startTime = now;
+        const elapsed = (now - startTime) / 1000.0;
+        window.seekTime(elapsed);
+        if (elapsed <= DURATION) {
+          requestAnimationFrame(step);
+        }
+      }
+      requestAnimationFrame(step);
+    };
+
+    // Auto-play support when opened in regular browser
+    window.addEventListener('DOMContentLoaded', () => {
+      window.seekTime(0);
+    });
+  </script>
+</body>
+</html>

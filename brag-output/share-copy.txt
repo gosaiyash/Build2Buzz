@@ -1,0 +1,2 @@
+Built Build2Buzz: a local-first Windows engine that turns GitHub repositories and live demos into verified, high-impact LinkedIn posts—with zero hallucinations, secret leak protection, and mandatory human sign-off.
+https://github.com/gosaiyash/Build2Buzz

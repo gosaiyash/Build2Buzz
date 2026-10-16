@@ -53,9 +53,10 @@ scratch/
 *.log
 
 # Playwright & Screenshots
-screenshots/
+/screenshots/
 test-results/
 playwright-report/
+!docs/screenshots/
 
 # Testing & Coverage
 .pytest_cache/
