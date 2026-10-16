@@ -707,7 +707,7 @@ async function openMediaSelectorModal() {
                 const isVid = Boolean(item.is_video);
                 const thumbHtml = isVid
                     ? `<div style="height:130px; display:flex; align-items:center; justify-content:center; background:#000; font-size:2rem;">🎬</div>`
-                    : `<img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(item.title)}" class="media-gallery-thumb" onerror="this.src='/static/icons/image-placeholder.svg'">`;
+                    : `<img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(item.title)}" class="media-gallery-thumb" onerror="this.onerror=null; this.src='/static/icons/image-placeholder.svg'">`;
 
                 return `
                     <div class="media-gallery-card">

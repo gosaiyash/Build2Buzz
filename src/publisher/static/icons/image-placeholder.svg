@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" fill="none">
+  <rect width="400" height="260" fill="#0f172a" />
+  <rect x="4" y="4" width="392" height="252" rx="8" stroke="#334155" stroke-width="2" stroke-dasharray="6 6" />
+  <g transform="translate(160, 70)" stroke="#64748b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <rect x="0" y="0" width="80" height="60" rx="8" />
+    <circle cx="26" cy="22" r="6" fill="#64748b" />
+    <path d="M6 52 L30 28 L52 50 L62 40 L74 52" />
+  </g>
+  <text x="200" y="172" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="500" text-anchor="middle">
+    Preview Unavailable
+  </text>
+</svg>
