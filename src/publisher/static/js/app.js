@@ -73,8 +73,10 @@ function initNavigation() {
             const panel = document.getElementById(`tab-${targetTab}`);
             if (panel) panel.classList.add("active");
 
-            const tabName = item.querySelector("span")?.textContent || "Dashboard";
+            const tabName = item.querySelector(".nav-label")?.textContent || item.querySelector("span")?.textContent || "Dashboard";
             if (topbarTitle) topbarTitle.textContent = tabName;
+            const breadcrumbEl = document.getElementById("topbar-breadcrumb-title");
+            if (breadcrumbEl) breadcrumbEl.textContent = tabName;
 
             // Close mobile sidebar if open
             closeSidebar();
@@ -162,20 +164,22 @@ function showNotification(message, type = "info", durationMs = 6000) {
     }
 
     const toast = document.createElement("div");
-    toast.className = `toast-item toast-${type}`;
+    toast.className = `toast toast-item toast-${type}`;
 
     const iconMap = {
-        success: "✅",
-        danger: "❌",
-        warning: "⚠️",
-        info: "ℹ️",
+        success: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+        danger: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+        warning: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+        info: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`,
     };
-    const icon = iconMap[type] || "ℹ️";
+    const icon = iconMap[type] || iconMap.info;
 
     toast.innerHTML = `
-        <span style="font-size: 1.1rem; flex-shrink: 0;">${icon}</span>
-        <div style="flex: 1; word-break: break-word; color: #f1f5f9; line-height: 1.4;">${escapeHtml(message)}</div>
-        <button type="button" class="toast-close" style="background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 0 0.25rem;">✕</button>
+        <span style="display: flex; align-items: center; justify-content: center; flex-shrink: 0;">${icon}</span>
+        <div style="flex: 1; word-break: break-word; color: #f8fafc; line-height: 1.45; font-size: 0.88rem;">${escapeHtml(message)}</div>
+        <button type="button" class="toast-close" aria-label="Close notification" style="background: none; border: none; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; padding: 2px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
     `;
 
     const closeBtn = toast.querySelector(".toast-close");
@@ -220,12 +224,28 @@ function showLoadingOverlay(title = "Generating LinkedIn Post Draft", message = 
     }
 
     loadingStartTime = Date.now();
-    if (timerEl) timerEl.textContent = "⏳ Elapsed: 0s";
+    if (timerEl) {
+        timerEl.innerHTML = `
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Elapsed: 0s</span>
+        `;
+    }
 
     clearInterval(loadingTimerInterval);
     loadingTimerInterval = setInterval(() => {
         const elapsedSec = Math.floor((Date.now() - loadingStartTime) / 1000);
-        if (timerEl) timerEl.textContent = `⏳ Elapsed: ${elapsedSec}s`;
+        if (timerEl) {
+            timerEl.innerHTML = `
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>Elapsed: ${elapsedSec}s</span>
+            `;
+        }
     }, 1000);
 
     if (overlay) overlay.style.display = "flex";
@@ -296,8 +316,14 @@ function renderProjectsTable(projects) {
             <td><span class="badge badge-${getBadgeClass(p.status)}">${escapeHtml(p.status || "CREATED")}</span></td>
             <td>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button class="btn btn-secondary btn-sm" onclick="viewProjectDetails(${p.id})">🔍 View Analysis</button>
-                    <button class="btn btn-primary btn-sm" onclick="openProjectDraft(${p.id})">✍️ Post Editor</button>
+                    <button class="btn btn-secondary btn-sm" onclick="viewProjectDetails(${p.id})">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <span>View Analysis</span>
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="openProjectDraft(${p.id})">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        <span>Post Editor</span>
+                    </button>
                 </div>
             </td>
         </tr>
@@ -756,18 +782,26 @@ function renderDraftMediaPreview(screenshotPath, mediaPaths) {
 
     if (list.length === 0) {
         mediaPreview.innerHTML = `
-            <div class="empty-media-state">
-                <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">📷</div>
+            <div class="empty-media-state" style="text-align: center; padding: 1.5rem 1rem; border: 1px dashed var(--border-medium); border-radius: var(--radius-md); background: rgba(0,0,0,0.2);">
+                <div style="color: var(--text-dim); margin-bottom: 0.5rem;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </div>
                 <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem; font-size: 0.92rem;">No Media Attached</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.85rem; max-width: 340px; margin-left: auto; margin-right: auto;">
                     Attach photos, demo videos, or repository assets. Your selected upload order is preserved for LinkedIn.
                 </div>
                 <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
                     <button type="button" class="btn btn-primary btn-sm" onclick="openMediaSelectorModal()">
-                        🖼️ Select & Order Media
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        <span>Select & Order Media</span>
                     </button>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="triggerExternalMediaUpload()">
-                        📁 Upload from Computer
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <span>Upload from Computer</span>
                     </button>
                 </div>
             </div>
@@ -793,13 +827,13 @@ function renderDraftMediaPreview(screenshotPath, mediaPaths) {
         const isLast = (idx === list.length - 1);
 
         const thumb = isVid
-            ? `<div style="width: 48px; height: 48px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">🎬</div>`
+            ? `<div style="width: 48px; height: 48px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--accent-amber); flex-shrink: 0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg></div>`
             : `<img src="${escapeHtml(url)}" alt="Thumb" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0;" onerror="this.onerror=null; this.src='/static/icons/image-placeholder.svg'">`;
 
         return `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; background: var(--bg-surface-elevated); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
                 <div style="display: flex; align-items: center; gap: 0.6rem; overflow: hidden;">
-                    <span class="media-order-badge" style="position: static; width: 22px; height: 22px; font-size: 0.7rem; flex-shrink: 0; box-shadow: none;">#${idx + 1}</span>
+                    <span class="media-order-badge" style="position: static; width: 22px; height: 22px; font-size: 0.7rem; flex-shrink: 0; box-shadow: none; background: var(--accent-primary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">#${idx + 1}</span>
                     ${thumb}
                     <div style="overflow: hidden;">
                         <div style="font-size: 0.82rem; font-weight: 600; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${escapeHtml(filename)}">
@@ -822,10 +856,10 @@ function renderDraftMediaPreview(screenshotPath, mediaPaths) {
 
     mediaPreview.innerHTML = `
         <div class="media-active-card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
-                    <span>📷 Upload Sequence</span>
-                    <span class="badge badge-info" style="font-size: 0.7rem;">${list.length} item${list.length > 1 ? 's' : ''}</span>
+                    <span>Upload Sequence</span>
+                    <span class="badge badge-info badge-sm">${list.length} item${list.length > 1 ? 's' : ''}</span>
                 </div>
                 <span style="font-size: 0.72rem; color: var(--text-muted);">Exact order: [${list.map((_, i) => i + 1).join(', ')}]</span>
             </div>
@@ -834,15 +868,18 @@ function renderDraftMediaPreview(screenshotPath, mediaPaths) {
                 ${itemsHtml}
             </div>
 
-            <div class="media-actions-bar" style="border-top: 1px solid var(--border-subtle); padding-top: 0.5rem;">
+            <div class="media-actions-bar" style="border-top: 1px solid var(--border-subtle); padding-top: 0.65rem; margin-top: 0.65rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <button type="button" class="btn btn-primary btn-sm" style="flex: 1;" onclick="openMediaSelectorModal()">
-                    🖼️ Manage & Order Media
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Manage & Order Media</span>
                 </button>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="triggerExternalMediaUpload()" title="Upload additional file from computer">
-                    📁 Upload More
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <span>Upload More</span>
                 </button>
                 <button type="button" class="btn btn-danger btn-sm" onclick="removeAttachedMedia()" title="Remove all media from this post">
-                    🗑️ Remove All
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <span>Remove All</span>
                 </button>
             </div>
         </div>
@@ -2211,7 +2248,12 @@ function renderHistoryTable(items) {
             <td><span class="badge badge-${getBadgeClass(h.status)}">${escapeHtml(h.status)}</span></td>
             <td>${new Date(h.created_at).toLocaleString()}</td>
             <td>${h.linkedin_post_id ? `<span style="color:var(--accent-emerald); font-family:monospace;">${escapeHtml(h.linkedin_post_id)}</span>` : (h.error_category ? `<span style="color:var(--accent-rose);">${escapeHtml(h.error_category)}</span>` : '<span style="color:var(--text-dim);">-</span>')}</td>
-            <td><button class="btn btn-secondary btn-sm" onclick="loadDraftById(${h.draft_id})">✍️ View Draft</button></td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="loadDraftById(${h.draft_id})">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    <span>View Draft</span>
+                </button>
+            </td>
         </tr>
     `).join("");
 }
